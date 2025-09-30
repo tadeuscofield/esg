@@ -15,15 +15,27 @@ function App() {
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [email, setEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
-  const [showCompanyModal, setShowCompanyModal] = useState(true)
-  const [companyInfo, setCompanyInfo] = useState({
-    name: '',
-    sector: '',
-    technicalResponsible: ''
+
+  // Carregar dados salvos do LocalStorage
+  const loadSavedData = () => {
+    const saved = localStorage.getItem('esgNexusData')
+    return saved ? JSON.parse(saved) : null
+  }
+
+  const [showCompanyModal, setShowCompanyModal] = useState(!loadSavedData())
+  const [companyInfo, setCompanyInfo] = useState(() => {
+    const saved = loadSavedData()
+    return saved?.companyInfo || {
+      name: '',
+      sector: '',
+      technicalResponsible: ''
+    }
   })
 
   // Estado de dados completo baseado no data-structure.md
-  const [esgData, setEsgData] = useState({
+  const [esgData, setEsgData] = useState(() => {
+    const saved = loadSavedData()
+    return saved?.esgData || {
     companyName: "ESG Nexus Pro",
     reportingPeriod: "2025-01",
 
@@ -316,6 +328,24 @@ function App() {
       document.documentElement.classList.remove('dark')
     }
   }, [darkMode])
+
+  // Salvar automaticamente no LocalStorage
+  useEffect(() => {
+    const dataToSave = {
+      companyInfo,
+      esgData,
+      timestamp: new Date().toISOString()
+    }
+    localStorage.setItem('esgNexusData', JSON.stringify(dataToSave))
+  }, [companyInfo, esgData])
+
+  // Função para limpar dados salvos
+  const clearSavedData = () => {
+    if (confirm('Deseja realmente limpar todos os dados salvos?')) {
+      localStorage.removeItem('esgNexusData')
+      window.location.reload()
+    }
+  }
 
   // Função para abrir modal específico
   const openModal = (category) => {
@@ -671,12 +701,22 @@ function App() {
     const splitGovSuggestion = doc.splitTextToSize(govSuggestion, 170)
     doc.text(splitGovSuggestion, 20, doc.lastAutoTable.finalY + 18)
 
-    // Rodapé em todas as páginas
+    // Rodapé em todas as páginas com disclaimer
     const pageCount = doc.internal.getNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i)
+
+      // Disclaimer
+      doc.setFontSize(7)
+      doc.setTextColor(120, 120, 120)
+      doc.setFont(undefined, 'italic')
+      const disclaimer = 'Este relatório contém dados autodeclarados. As métricas são baseadas em GRI, SASB e TCFD, mas não constituem auditoria oficial.'
+      doc.text(disclaimer, 105, 275, { align: 'center', maxWidth: 180 })
+
+      // Informações do rodapé
       doc.setFontSize(9)
       doc.setTextColor(150, 150, 150)
+      doc.setFont(undefined, 'normal')
       doc.text(`Gerado por ESG Nexus Pro • ${timestamp}`, 105, 285, { align: 'center' })
       doc.text(`Página ${i} de ${pageCount}`, 105, 290, { align: 'center' })
     }
