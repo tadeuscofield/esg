@@ -329,32 +329,19 @@ function App() {
     let totalScore = 0
     let totalWeight = 0
 
-    console.log('=== CALCULATING PILLAR SCORE ===')
-    console.log('Metrics:', metrics)
-
     Object.values(metrics).forEach(metric => {
       if (metric.value !== undefined && metric.weight !== undefined) {
-        console.log(`Metric: ${metric.name}, value: ${metric.value}, weight: ${metric.weight}`)
         totalScore += metric.value * metric.weight
         totalWeight += metric.weight
       }
     })
 
-    const finalScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
-    console.log(`Total Score: ${totalScore}, Total Weight: ${totalWeight}, Final: ${finalScore}`)
-    console.log('=================================')
-
-    return finalScore
+    return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
   }
 
   // Função para salvar dados do formulário
   const handleFormSubmit = (e, category) => {
     e.preventDefault()
-
-    console.log('=== HANDLE FORM SUBMIT ===')
-    console.log('Category:', category)
-    console.log('Form Data:', formData)
-    console.log('Current metrics:', esgData[category].metrics)
 
     // Mesclar formData com métricas existentes
     const updatedMetrics = {
@@ -362,26 +349,18 @@ function App() {
       ...formData
     }
 
-    console.log('Updated Metrics:', updatedMetrics)
-
     // Calcular novo score do pilar
     const newScore = calculatePillarScore(updatedMetrics)
 
-    console.log('New Score calculated:', newScore)
-
     // Atualizar dados no estado com score recalculado
-    setEsgData(prev => {
-      const newData = {
-        ...prev,
-        [category]: {
-          ...prev[category],
-          score: newScore,
-          metrics: updatedMetrics
-        }
+    setEsgData(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        score: newScore,
+        metrics: updatedMetrics
       }
-      console.log('New esgData:', newData)
-      return newData
-    })
+    }))
 
     setShowModal(null)
     setFormData({})
@@ -623,14 +602,9 @@ function App() {
   }
 
   const handleExport = (format) => {
-    console.log('=======================================')
-    console.log('handleExport called with format:', format)
-    console.log('Current esgData:', esgData)
-    console.log('Company Info:', companyInfo)
     const timestamp = new Date().toISOString().split('T')[0]
 
     if (format === 'excel') {
-      console.log('Exporting Excel...')
       // Exportar CSV completo com dados adicionais
       let csv = 'Categoria,Métrica,Valor,Peso,Status,Sugestão\n'
 
@@ -652,12 +626,9 @@ function App() {
       setShowExportModal(false)
 
     } else if (format === 'pdf') {
-      console.log('Generating PDF...')
       try {
         const doc = generatePDF()
-        console.log('PDF generated, saving...')
         doc.save(`ESG-Report-${timestamp}.pdf`)
-        console.log('PDF saved successfully')
         setShowExportModal(false)
 
         // Enviar automaticamente para o email cadastrado
