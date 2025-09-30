@@ -188,7 +188,6 @@
     "chromatic": "^8.0.0",
     "cypress": "^13.6.0",
     "start-server-and-test": "^2.0.3",
-    "percy-cypress": "^3.1.2",
     "lighthouse-ci": "^1.1.2",
     "@axe-core/react": "^4.8.2",
     "pa11y": "^6.2.3",
