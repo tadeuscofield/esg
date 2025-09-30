@@ -1991,7 +1991,6 @@ function App() {
                       boardSize: 'Tamanho do Conselho',
                       independentDirectors: 'Diretores Independentes (%)',
                       nonExecutive: 'Não Executivos (%)',
-                      averageTenure: 'Tempo Médio Mandato (anos)',
                       boardEvaluations: 'Avaliações do Conselho',
                       successionPlanning: 'Planejamento Sucessório',
                       boardMeetings: 'Reuniões do Conselho/Ano',
