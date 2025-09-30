@@ -647,30 +647,40 @@ function App() {
   // Função para enviar PDF automaticamente
   const handleAutoSendEmail = async (doc, timestamp) => {
     try {
+      console.log('🔄 Preparando envio de email para:', companyInfo.email)
       const pdfBlob = doc.output('blob')
+      console.log('📄 PDF Blob criado, tamanho:', (pdfBlob.size / 1024).toFixed(2), 'KB')
 
       // Converter para base64
       const reader = new FileReader()
       reader.readAsDataURL(pdfBlob)
       reader.onloadend = async () => {
-        const base64data = reader.result.split(',')[1]
+        try {
+          const base64data = reader.result.split(',')[1]
+          console.log('🔐 PDF convertido para base64, tamanho:', (base64data.length / 1024).toFixed(2), 'KB')
 
-        const templateParams = {
-          to_email: companyInfo.email,
-          from_name: 'ESG Nexus Pro',
-          company_name: companyInfo.name,
-          message: `Olá ${companyInfo.technicalResponsible},\n\nSegue em anexo o relatório ESG completo da ${companyInfo.name} gerado em ${new Date().toLocaleDateString('pt-BR')}.\n\nAtenciosamente,\nESG Nexus Pro`,
-          pdf_attachment: base64data
+          const templateParams = {
+            to_email: companyInfo.email,
+            from_name: 'ESG Nexus Pro',
+            company_name: companyInfo.name,
+            message: `Olá ${companyInfo.technicalResponsible},\n\nSegue em anexo o relatório ESG completo da ${companyInfo.name} gerado em ${new Date().toLocaleDateString('pt-BR')}.\n\nAtenciosamente,\nESG Nexus Pro`,
+            pdf_attachment: base64data
+          }
+
+          console.log('📧 Enviando email via EmailJS...')
+          // Enviar email via EmailJS
+          const response = await emailjs.send('service_dggqn0s', 'template_gl7qjvp', templateParams)
+          console.log('✅ Email enviado com sucesso!', response)
+
+          alert(`✅ Relatório PDF enviado com sucesso para ${companyInfo.email}!\n\n⚠️ Se não receber em alguns minutos, verifique a caixa de SPAM.`)
+        } catch (emailError) {
+          console.error('❌ Erro ao enviar email:', emailError)
+          alert(`⚠️ PDF salvo localmente.\n\nErro ao enviar email para ${companyInfo.email}:\n${emailError.text || emailError.message}\n\nVerifique se o template do EmailJS está configurado corretamente.`)
         }
-
-        // Enviar email via EmailJS
-        await emailjs.send('service_dggqn0s', 'template_gl7qjvp', templateParams)
-
-        alert(`✅ Relatório PDF enviado com sucesso para ${companyInfo.email}!`)
       }
     } catch (error) {
-      console.error('Erro ao enviar email:', error)
-      alert(`⚠️ PDF salvo localmente, mas houve erro ao enviar para ${companyInfo.email}.`)
+      console.error('❌ Erro geral:', error)
+      alert(`⚠️ PDF salvo localmente, mas houve erro ao processar o envio para ${companyInfo.email}.`)
     }
   }
 
