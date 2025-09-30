@@ -1,71 +1,411 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [showAddModal, setShowAddModal] = useState(false)
+  const [showModal, setShowModal] = useState(null)
   const [showExportModal, setShowExportModal] = useState(false)
 
-  const [data, setData] = useState({
-    emissions: [
-      { month: 'Jan', value: 14200, target: 15000 },
-      { month: 'Fev', value: 13800, target: 14500 },
-      { month: 'Mar', value: 13200, target: 14000 },
-      { month: 'Abr', value: 12900, target: 13500 },
-      { month: 'Mai', value: 12450, target: 13000 },
-    ],
-    energy: { renewable: 68, fossil: 32 },
-    diversity: { women: 45, men: 55 },
-    compliance: 94
+  // Estado de dados completo baseado no data-structure.md
+  const [esgData, setEsgData] = useState({
+    companyName: "ESG Nexus Pro",
+    reportingPeriod: "2025-01",
+
+    environmental: {
+      score: 92,
+      metrics: {
+        climateRisk: {
+          name: "Riscos Climáticos",
+          value: 85,
+          weight: 0.25,
+          status: "good",
+          details: {
+            physicalRisk: 20,
+            transitionRisk: 15,
+            netZeroTarget: "2050",
+            scienceBasedTarget: true,
+            tcfdAligned: true
+          }
+        },
+        emissions: {
+          name: "Emissões GEE",
+          value: 88,
+          weight: 0.25,
+          status: "good",
+          details: {
+            scope1: 12500,
+            scope2Market: 8300,
+            scope3: {
+              total: 45200,
+              purchasedGoods: 25000,
+              businessTravel: 8500,
+              upstreamTransport: 11700
+            },
+            intensity: {
+              revenue: 125,
+              employee: 8.5
+            },
+            reductionYoY: 12.4,
+            baselineYear: "2020",
+            offsetPercentage: 15
+          }
+        },
+        resourceEfficiency: {
+          name: "Economia Circular",
+          value: 75,
+          weight: 0.15,
+          status: "moderate",
+          details: {
+            recyclingRate: 68,
+            recyclableContent: 55,
+            hazardousWaste: 120,
+            wasteToLandfill: 450,
+            circularityScore: 72
+          }
+        },
+        waterManagement: {
+          name: "Gestão Hídrica",
+          value: 82,
+          weight: 0.15,
+          status: "good",
+          details: {
+            totalConsumption: 125000,
+            reuseRate: 35,
+            recycleRate: 22,
+            waterStressPercentage: 15,
+            wastewaterTreated: 92,
+            cdpWaterScore: "B"
+          }
+        },
+        biodiversity: {
+          name: "Biodiversidade",
+          value: 78,
+          weight: 0.20,
+          status: "good",
+          details: {
+            biodiversityFootprint: "Medium",
+            protectedAreasImpacted: 2,
+            restorationProjects: 5,
+            restorationHectares: 120,
+            tnfdAligned: true,
+            sbtForNature: false
+          }
+        }
+      }
+    },
+
+    social: {
+      score: 85,
+      metrics: {
+        humanRights: {
+          name: "Direitos Humanos",
+          value: 88,
+          weight: 0.25,
+          status: "good",
+          details: {
+            suppliersTotal: 450,
+            tier1Audited: 95,
+            highRiskSuppliers: 12,
+            violations: 3,
+            sa8000Certified: true,
+            humanRightsPolicy: true,
+            grievanceMechanism: true
+          }
+        },
+        diversity: {
+          name: "Diversidade & Inclusão",
+          value: 82,
+          weight: 0.20,
+          status: "good",
+          details: {
+            womenTotal: 45,
+            womenLeadership: 38,
+            womenBoard: 40,
+            genderPayGap: 5.2,
+            inclusionScore: 8.5,
+            lgbtqPolicies: true,
+            disabilityInclusion: 6,
+            parentalLeave: {
+              maternity: 20,
+              paternity: 8
+            }
+          }
+        },
+        communityImpact: {
+          name: "Impacto Comunitário",
+          value: 79,
+          weight: 0.15,
+          status: "good",
+          details: {
+            localEmployment: 75,
+            localSuppliers: 62,
+            socialInvestment: 850000,
+            volunteerHours: 5200,
+            sroi: 3.2,
+            beneficiaries: 12000,
+            educationPrograms: 8,
+            satisfactionScore: 8.2
+          }
+        },
+        employeeWellbeing: {
+          name: "Bem-estar dos Funcionários",
+          value: 86,
+          weight: 0.20,
+          status: "good",
+          details: {
+            burnoutRate: 12,
+            satisfactionScore: 8.7,
+            eNPS: 45,
+            engagementScore: 82,
+            turnover: 8.5,
+            voluntaryTurnover: 6.2,
+            averageTenure: 5.8,
+            healthInsurance: true,
+            retirementPlan: true,
+            remoteWork: true,
+            flexibleHours: true
+          }
+        },
+        safety: {
+          name: "Segurança",
+          value: 90,
+          weight: 0.20,
+          status: "excellent",
+          details: {
+            ltifr: 0.8,
+            trifr: 2.1,
+            fatalities: 0,
+            nearMisses: 85,
+            safetyTrainingHours: 12500,
+            safetyTrainingCoverage: 100,
+            iso45001: true,
+            behaviorBasedSafety: true
+          }
+        }
+      }
+    },
+
+    governance: {
+      score: 84,
+      metrics: {
+        esgIntegration: {
+          name: "Integração ESG",
+          value: 88,
+          weight: 0.20,
+          status: "good",
+          details: {
+            compensationLinked: 30,
+            ceoCompensationESG: 25,
+            ltipESGMetrics: true,
+            esgCommittee: true,
+            strategyIntegrated: true,
+            materialityAssessment: true,
+            publicTargets: true
+          }
+        },
+        boardStructure: {
+          name: "Estrutura do Conselho",
+          value: 82,
+          weight: 0.15,
+          status: "good",
+          details: {
+            boardSize: 9,
+            independentDirectors: 55,
+            nonExecutive: 67,
+            womenBoard: 44,
+            averageTenure: 4.5,
+            boardEvaluations: true,
+            successionPlanning: true,
+            boardMeetings: 12,
+            attendance: 95
+          }
+        },
+        transparency: {
+          name: "Transparência",
+          value: 85,
+          weight: 0.15,
+          status: "good",
+          details: {
+            msciScore: "AA",
+            sustainalyticsRisk: "Low",
+            cdpClimate: "B",
+            disclosureScore: 85,
+            integratedReporting: true,
+            tcfdReport: true,
+            sasbStandards: true,
+            externalAssurance: true
+          }
+        },
+        cyberEthics: {
+          name: "Cyber & Ética",
+          value: 80,
+          weight: 0.15,
+          status: "good",
+          details: {
+            dataBreaches: 0,
+            breachSeverity: "None",
+            cyberInsurance: true,
+            iso27001: true,
+            gdprCompliant: true,
+            lgpdCompliant: true,
+            aiEthicsPolicy: true,
+            cyberTraining: 100,
+            ethicsTraining: 98
+          }
+        },
+        compliance: {
+          name: "Compliance",
+          value: 92,
+          weight: 0.15,
+          status: "excellent",
+          details: {
+            fines: 0,
+            fineAmount: 0,
+            investigations: 0,
+            litigations: 1,
+            codeOfConduct: true,
+            anticorruptionPolicy: true,
+            whistleblowerChannel: true,
+            whistleblowerCases: 5,
+            complianceTraining: 100,
+            anticorruptionTraining: 100
+          }
+        },
+        cryptoTreasury: {
+          name: "Tesouraria Digital",
+          value: 75,
+          weight: 0.20,
+          status: "moderate",
+          details: {
+            btcAllocation: 5,
+            btcAmount: 21.5,
+            sustainableMining: true,
+            renewableEnergy: 85,
+            carbonNeutral: true,
+            boardApproved: true,
+            custodyType: "Multi-sig",
+            insurance: true
+          }
+        }
+      }
+    }
   })
 
-  const [newEmission, setNewEmission] = useState({ month: '', value: '', target: '' })
+  const [formData, setFormData] = useState({})
 
-  const handleAddEmission = (e) => {
-    e.preventDefault()
-    if (newEmission.month && newEmission.value && newEmission.target) {
-      setData({
-        ...data,
-        emissions: [...data.emissions, {
-          month: newEmission.month,
-          value: Number(newEmission.value),
-          target: Number(newEmission.target)
-        }]
-      })
-      setNewEmission({ month: '', value: '', target: '' })
-      setShowAddModal(false)
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
     }
+  }, [darkMode])
+
+  // Função para abrir modal específico
+  const openModal = (category) => {
+    setShowModal(category)
+    setFormData({})
   }
 
+  // Função para salvar dados do formulário
+  const handleFormSubmit = (e, category) => {
+    e.preventDefault()
+
+    // Atualizar dados no estado
+    setEsgData(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        metrics: {
+          ...prev[category].metrics,
+          ...formData
+        }
+      }
+    }))
+
+    setShowModal(null)
+    setFormData({})
+    alert('Dados salvos com sucesso!')
+  }
+
+  // Função de exportação
   const handleExport = (format) => {
-    if (format === 'pdf') {
-      alert('Relatório PDF será gerado com:\n\n' +
-            `• ${data.emissions.length} registros de emissões\n` +
-            `• Score ESG: 87/100\n` +
-            `• Compliance: ${data.compliance}%\n` +
-            `• Energia Renovável: ${data.energy.renewable}%`)
-    } else if (format === 'excel') {
-      const csv = 'Período,Emissões (ton),Meta (ton),Status\n' +
-                  data.emissions.map(e =>
-                    `${e.month},${e.value},${e.target},${e.value <= e.target ? 'Atingida' : 'Acima'}`
-                  ).join('\n')
-      const blob = new Blob([csv], { type: 'text/csv' })
+    const timestamp = new Date().toISOString().split('T')[0]
+
+    if (format === 'excel') {
+      // Exportar CSV completo
+      let csv = 'Categoria,Métrica,Valor,Peso,Status\n'
+
+      Object.entries(esgData).forEach(([pillar, data]) => {
+        if (data.metrics) {
+          Object.entries(data.metrics).forEach(([key, metric]) => {
+            csv += `${pillar},${metric.name},${metric.value},${metric.weight},${metric.status}\n`
+          })
+        }
+      })
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'relatorio-esg.csv'
+      a.download = `ESG-Report-${timestamp}.csv`
       a.click()
+
+    } else if (format === 'pdf') {
+      // Simular PDF com dados formatados
+      const esgScore = Math.round(
+        (esgData.environmental.score * 0.35) +
+        (esgData.social.score * 0.30) +
+        (esgData.governance.score * 0.35)
+      )
+
+      alert(`📄 Relatório PDF Gerado!\n\n` +
+            `Empresa: ${esgData.companyName}\n` +
+            `Período: ${esgData.reportingPeriod}\n\n` +
+            `SCORE ESG GLOBAL: ${esgScore}/100\n\n` +
+            `Ambiental: ${esgData.environmental.score}/100\n` +
+            `Social: ${esgData.social.score}/100\n` +
+            `Governança: ${esgData.governance.score}/100\n\n` +
+            `O arquivo PDF seria gerado aqui com todas as métricas detalhadas.`)
+
+    } else if (format === 'presentation') {
+      // Apresentação executiva
+      const esgScore = Math.round(
+        (esgData.environmental.score * 0.35) +
+        (esgData.social.score * 0.30) +
+        (esgData.governance.score * 0.35)
+      )
+
+      alert(`📊 Apresentação Executiva ESG\n\n` +
+            `HIGHLIGHTS:\n\n` +
+            `🌍 AMBIENTAL (${esgData.environmental.score}/100)\n` +
+            `• Redução de emissões: ${esgData.environmental.metrics.emissions.details.reductionYoY}%\n` +
+            `• Economia circular: ${esgData.environmental.metrics.resourceEfficiency.details.recyclingRate}%\n` +
+            `• CDP Water: ${esgData.environmental.metrics.waterManagement.details.cdpWaterScore}\n\n` +
+            `👥 SOCIAL (${esgData.social.score}/100)\n` +
+            `• Diversidade: ${esgData.social.metrics.diversity.details.womenTotal}% mulheres\n` +
+            `• LTIFR: ${esgData.social.metrics.safety.details.ltifr}\n` +
+            `• eNPS: ${esgData.social.metrics.employeeWellbeing.details.eNPS}\n\n` +
+            `⚖️ GOVERNANÇA (${esgData.governance.score}/100)\n` +
+            `• MSCI: ${esgData.governance.metrics.transparency.details.msciScore}\n` +
+            `• Compliance: ${esgData.governance.metrics.compliance.value}/100\n` +
+            `• Mulheres no Board: ${esgData.governance.metrics.boardStructure.details.womenBoard}%`)
     }
+
     setShowExportModal(false)
   }
 
-  const maxEmission = Math.max(...data.emissions.map(e => Math.max(e.value, e.target)))
-  const avgEmissions = data.emissions.reduce((sum, e) => sum + e.value, 0) / data.emissions.length
-  const reduction = ((data.emissions[0].value - data.emissions[data.emissions.length-1].value) / data.emissions[0].value * 100).toFixed(1)
+  // Calcular ESG Score
+  const esgScore = Math.round(
+    (esgData.environmental.score * 0.35) +
+    (esgData.social.score * 0.30) +
+    (esgData.governance.score * 0.35)
+  )
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-100'}`}>
       {/* Header */}
-      <header className="bg-white shadow-md sticky top-0 z-50">
+      <header className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} shadow-md sticky top-0 z-50 border-b`}>
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
@@ -73,20 +413,28 @@ function App() {
                 <span className="text-white font-bold text-2xl">E</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">ESG Nexus Pro</h1>
-                <p className="text-sm text-gray-600">Plataforma Profissional de Gestão ESG</p>
+                <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>ESG Nexus Pro</h1>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Plataforma Profissional de Gestão ESG</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Dark Mode Toggle */}
               <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
+                onClick={() => setDarkMode(!darkMode)}
+                className={`p-2.5 rounded-lg transition-all ${darkMode ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                title={darkMode ? 'Modo Claro' : 'Modo Escuro'}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Adicionar Dados</span>
+                {darkMode ? (
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                  </svg>
+                )}
               </button>
+
               <button
                 onClick={() => setShowExportModal(true)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
@@ -103,8 +451,8 @@ function App() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-md mb-8">
-          <div className="flex border-b">
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md mb-8`}>
+          <div className={`flex border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
             {[
               { id: 'dashboard', name: 'Dashboard', icon: '📊' },
               { id: 'environmental', name: 'Ambiental', icon: '🌱' },
@@ -117,8 +465,8 @@ function App() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 px-6 py-4 font-semibold transition-all relative ${
                   activeTab === tab.id
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? `${darkMode ? 'text-blue-400 bg-blue-900/30' : 'text-blue-600 bg-blue-50'}`
+                    : `${darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-50'}`
                 }`}
               >
                 <span className="text-xl mr-2">{tab.icon}</span>
@@ -131,280 +479,396 @@ function App() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Column 1 & 2 */}
-          <div className="lg:col-span-2 space-y-8">
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="text-emerald-100 text-sm font-medium">Redução CO2</p>
-                    <p className="text-4xl font-bold mt-2">{reduction}%</p>
+                    <p className="text-emerald-100 text-sm font-medium">Score ESG</p>
+                    <p className="text-4xl font-bold mt-2">{esgScore}</p>
+                  </div>
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <span className="text-3xl">🌟</span>
+                  </div>
+                </div>
+                <p className="text-emerald-100 text-sm">de 100 pontos</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium">Ambiental</p>
+                    <p className="text-4xl font-bold mt-2">{esgData.environmental.score}</p>
                   </div>
                   <div className="bg-white/20 p-3 rounded-lg">
                     <span className="text-3xl">🌍</span>
                   </div>
                 </div>
-                <p className="text-emerald-100 text-sm">vs período anterior</p>
+                <p className="text-green-100 text-sm">sustentabilidade</p>
               </div>
 
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Energia Renovável</p>
-                    <p className="text-4xl font-bold mt-2">{data.energy.renewable}%</p>
+                    <p className="text-blue-100 text-sm font-medium">Social</p>
+                    <p className="text-4xl font-bold mt-2">{esgData.social.score}</p>
                   </div>
                   <div className="bg-white/20 p-3 rounded-lg">
-                    <span className="text-3xl">⚡</span>
+                    <span className="text-3xl">👥</span>
                   </div>
                 </div>
-                <p className="text-blue-100 text-sm">da matriz energética</p>
+                <p className="text-blue-100 text-sm">responsabilidade</p>
               </div>
 
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="text-purple-100 text-sm font-medium">Compliance</p>
-                    <p className="text-4xl font-bold mt-2">{data.compliance}%</p>
+                    <p className="text-purple-100 text-sm font-medium">Governança</p>
+                    <p className="text-4xl font-bold mt-2">{esgData.governance.score}</p>
                   </div>
                   <div className="bg-white/20 p-3 rounded-lg">
-                    <span className="text-3xl">✓</span>
+                    <span className="text-3xl">⚖️</span>
                   </div>
                 </div>
-                <p className="text-purple-100 text-sm">conformidade atingida</p>
+                <p className="text-purple-100 text-sm">compliance</p>
               </div>
             </div>
 
-            {/* Chart */}
-            <div className="bg-white rounded-xl shadow-md p-8">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900">Evolução de Emissões CO2</h3>
-                  <p className="text-gray-600 mt-1">Toneladas de CO2 equivalente por período</p>
-                </div>
-                <div className="flex items-center space-x-6 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-blue-600 rounded"></div>
-                    <span className="text-gray-600 font-medium">Real</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-dashed border-red-500"></div>
-                    <span className="text-gray-600 font-medium">Meta</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative h-96">
-                <div className="absolute inset-0 flex items-end justify-around pb-12">
-                  {data.emissions.map((item, idx) => {
-                    const height = (item.value / maxEmission) * 100
-                    const targetHeight = (item.target / maxEmission) * 100
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center group mx-1">
-                        <div className="relative w-full px-2 h-full flex items-end">
-                          <div className="relative w-full">
-                            {/* Target Line */}
-                            <div
-                              className="absolute w-full border-t-2 border-dashed border-red-500 z-10"
-                              style={{ bottom: `${targetHeight}%` }}
-                            >
-                              <div className="opacity-0 group-hover:opacity-100 absolute -top-8 right-0 bg-red-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap font-semibold">
-                                Meta: {item.target.toLocaleString()}
-                              </div>
-                            </div>
-
-                            {/* Bar */}
-                            <div
-                              className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg transition-all cursor-pointer hover:from-blue-700 hover:to-blue-500 shadow-lg"
-                              style={{ height: `${height}%` }}
-                            >
-                              <div className="opacity-0 group-hover:opacity-100 absolute -top-16 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap font-semibold z-20">
-                                {item.value.toLocaleString()} ton
-                                <br />
-                                <span className={item.value <= item.target ? 'text-green-300' : 'text-red-300'}>
-                                  {item.value <= item.target ? '✓ Meta atingida' : '✗ Acima da meta'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-700 mt-3">{item.month}</span>
+            {/* Score Circular */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className={`${darkMode ? 'bg-gradient-to-br from-indigo-900 to-purple-900' : 'bg-gradient-to-br from-indigo-600 to-purple-700'} rounded-xl shadow-lg p-8 text-white`}>
+                <h3 className="text-xl font-bold mb-6">Score ESG Global</h3>
+                <div className="flex flex-col items-center">
+                  <div className="relative">
+                    <svg className="w-48 h-48 transform -rotate-90">
+                      <circle cx="96" cy="96" r="80" stroke="rgba(255,255,255,0.2)" strokeWidth="16" fill="none" />
+                      <circle
+                        cx="96" cy="96" r="80"
+                        stroke="white"
+                        strokeWidth="16"
+                        fill="none"
+                        strokeDasharray="502"
+                        strokeDashoffset={502 - (502 * esgScore / 100)}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-6xl font-bold">{esgScore}</div>
+                        <div className="text-sm opacity-90 mt-1">de 100</div>
                       </div>
-                    )
-                  })}
+                    </div>
+                  </div>
+                  <div className="mt-8 w-full space-y-3">
+                    <div className="flex justify-between items-center py-2 border-t border-white/20">
+                      <span className="font-medium">🌱 Ambiental</span>
+                      <span className="font-bold">{esgData.environmental.score}/100</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-t border-white/20">
+                      <span className="font-medium">👥 Social</span>
+                      <span className="font-bold">{esgData.social.score}/100</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-t border-white/20">
+                      <span className="font-medium">⚖️ Governança</span>
+                      <span className="font-bold">{esgData.governance.score}/100</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
-              <div className="px-8 py-6 border-b bg-gray-50">
-                <h3 className="text-xl font-bold text-gray-900">Histórico Detalhado</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left px-8 py-4 text-sm font-bold text-gray-700">Período</th>
-                      <th className="text-right px-8 py-4 text-sm font-bold text-gray-700">Emissões (ton)</th>
-                      <th className="text-right px-8 py-4 text-sm font-bold text-gray-700">Meta (ton)</th>
-                      <th className="text-right px-8 py-4 text-sm font-bold text-gray-700">Diferença</th>
-                      <th className="text-center px-8 py-4 text-sm font-bold text-gray-700">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {data.emissions.map((item, idx) => {
-                      const diff = item.target - item.value
-                      const diffPercent = ((diff / item.target) * 100).toFixed(1)
-                      return (
-                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-8 py-4 font-semibold text-gray-900">{item.month}</td>
-                          <td className="px-8 py-4 text-right font-semibold text-gray-900">{item.value.toLocaleString()}</td>
-                          <td className="px-8 py-4 text-right text-gray-600">{item.target.toLocaleString()}</td>
-                          <td className={`px-8 py-4 text-right font-semibold ${diff >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {diff >= 0 ? '-' : '+'}{Math.abs(diff).toLocaleString()} ({diffPercent}%)
-                          </td>
-                          <td className="px-8 py-4 text-center">
-                            <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold ${
-                              item.value <= item.target
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-red-100 text-red-700'
-                            }`}>
-                              {item.value <= item.target ? '✓ Atingida' : '✗ Acima'}
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+              <div className={`lg:col-span-2 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md p-8`}>
+                <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-6`}>Métricas Principais</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-green-50'}`}>
+                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Redução de Emissões</p>
+                    <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                      {esgData.environmental.metrics.emissions.details.reductionYoY}%
+                    </p>
+                    <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>vs ano anterior</p>
+                  </div>
+
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
+                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diversidade</p>
+                    <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                      {esgData.social.metrics.diversity.details.womenTotal}%
+                    </p>
+                    <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>mulheres na empresa</p>
+                  </div>
+
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-purple-50'}`}>
+                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>LTIFR</p>
+                    <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                      {esgData.social.metrics.safety.details.ltifr}
+                    </p>
+                    <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>taxa de acidentes</p>
+                  </div>
+
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-indigo-50'}`}>
+                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Compliance</p>
+                    <p className={`text-3xl font-bold mt-2 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                      {esgData.governance.metrics.compliance.value}%
+                    </p>
+                    <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>conformidade total</p>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <h4 className={`font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Ratings Externos</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className={`text-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>MSCI</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        {esgData.governance.metrics.transparency.details.msciScore}
+                      </p>
+                    </div>
+                    <div className={`text-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>CDP Climate</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                        {esgData.governance.metrics.transparency.details.cdpClimate}
+                      </p>
+                    </div>
+                    <div className={`text-center p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-1`}>CDP Water</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+                        {esgData.environmental.metrics.waterManagement.details.cdpWaterScore}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Column 3 */}
-          <div className="space-y-8">
-            {/* ESG Score */}
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-xl shadow-lg p-8 text-white">
-              <h3 className="text-xl font-bold mb-6">Score ESG Global</h3>
-              <div className="flex flex-col items-center">
-                <div className="relative">
-                  <svg className="w-40 h-40 transform -rotate-90">
-                    <circle cx="80" cy="80" r="70" stroke="rgba(255,255,255,0.2)" strokeWidth="12" fill="none" />
-                    <circle
-                      cx="80" cy="80" r="70"
-                      stroke="white"
-                      strokeWidth="12"
-                      fill="none"
-                      strokeDasharray="440"
-                      strokeDashoffset="57.2"
-                      strokeLinecap="round"
-                      className="transition-all duration-1000"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-5xl font-bold">87</div>
-                      <div className="text-sm opacity-90 mt-1">de 100</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-8 w-full space-y-3">
-                  <div className="flex justify-between items-center py-2 border-t border-white/20">
-                    <span className="font-medium">Ambiental</span>
-                    <span className="font-bold">92/100</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-t border-white/20">
-                    <span className="font-medium">Social</span>
-                    <span className="font-bold">85/100</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-t border-white/20">
-                    <span className="font-medium">Governança</span>
-                    <span className="font-bold">84/100</span>
-                  </div>
-                </div>
-              </div>
+        {/* Ambiental Tab */}
+        {activeTab === 'environmental' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Gestão Ambiental</h2>
+              <button
+                onClick={() => openModal('environmental')}
+                className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Adicionar Dados Ambientais</span>
+              </button>
             </div>
 
-            {/* Pie Charts */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-6">Distribuição Energética</h3>
-              <div className="flex justify-center mb-4">
-                <div className="relative w-40 h-40">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="20"
-                            strokeDasharray={`${data.energy.renewable * 2.51} 251`} />
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" strokeWidth="20"
-                            strokeDasharray={`${data.energy.fossil * 2.51} 251`}
-                            strokeDashoffset={`-${data.energy.renewable * 2.51}`} />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">{data.energy.renewable}%</div>
-                      <div className="text-xs text-gray-600">Renovável</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 bg-green-50 rounded">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-gray-700">Renovável</span>
-                  </div>
-                  <span className="font-bold text-gray-900">{data.energy.renewable}%</span>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-red-50 rounded">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-gray-700">Fóssil</span>
-                  </div>
-                  <span className="font-bold text-gray-900">{data.energy.fossil}%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Certifications */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Certificações</h3>
-              <div className="space-y-3">
-                {[
-                  { name: 'ISO 14001', status: 'Ativa', expires: '31/12/2024', color: 'green' },
-                  { name: 'B Corp', status: 'Ativa', expires: '30/06/2025', color: 'green' },
-                  { name: 'GRI Standards', status: 'Processo', expires: '15/03/2025', color: 'yellow' },
-                ].map((cert, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 rounded-full ${cert.color === 'green' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                      <div>
-                        <p className="font-semibold text-gray-900">{cert.name}</p>
-                        <p className="text-xs text-gray-600">Validade: {cert.expires}</p>
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(esgData.environmental.metrics).map(([key, metric]) => (
+                <div key={key} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md p-6`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>{metric.name}</h3>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      cert.color === 'green' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                      metric.status === 'excellent' ? 'bg-green-100 text-green-700' :
+                      metric.status === 'good' ? 'bg-blue-100 text-blue-700' :
+                      'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {cert.status}
+                      {metric.value}/100
                     </span>
                   </div>
-                ))}
-              </div>
+
+                  <div className="space-y-2">
+                    {Object.entries(metric.details).slice(0, 4).map(([detailKey, detailValue]) => (
+                      <div key={detailKey} className={`flex justify-between text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <span className="capitalize">{detailKey.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                        <span className="font-semibold">
+                          {typeof detailValue === 'boolean' ? (detailValue ? '✓' : '✗') :
+                           typeof detailValue === 'object' ? 'Ver detalhes' :
+                           detailValue}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className="bg-green-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${metric.value}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Social Tab */}
+        {activeTab === 'social' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Gestão Social</h2>
+              <button
+                onClick={() => openModal('social')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Adicionar Dados Sociais</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(esgData.social.metrics).map(([key, metric]) => (
+                <div key={key} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md p-6`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>{metric.name}</h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      metric.status === 'excellent' ? 'bg-green-100 text-green-700' :
+                      metric.status === 'good' ? 'bg-blue-100 text-blue-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {metric.value}/100
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {Object.entries(metric.details).slice(0, 4).map(([detailKey, detailValue]) => (
+                      <div key={detailKey} className={`flex justify-between text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <span className="capitalize">{detailKey.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                        <span className="font-semibold">
+                          {typeof detailValue === 'boolean' ? (detailValue ? '✓' : '✗') :
+                           typeof detailValue === 'object' ? 'Ver detalhes' :
+                           detailValue}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${metric.value}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Governança Tab */}
+        {activeTab === 'governance' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Governança Corporativa</h2>
+              <button
+                onClick={() => openModal('governance')}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Adicionar Dados de Governança</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(esgData.governance.metrics).map(([key, metric]) => (
+                <div key={key} className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md p-6`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-900'}`}>{metric.name}</h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      metric.status === 'excellent' ? 'bg-green-100 text-green-700' :
+                      metric.status === 'good' ? 'bg-blue-100 text-blue-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {metric.value}/100
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {Object.entries(metric.details).slice(0, 4).map(([detailKey, detailValue]) => (
+                      <div key={detailKey} className={`flex justify-between text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <span className="capitalize">{detailKey.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                        <span className="font-semibold">
+                          {typeof detailValue === 'boolean' ? (detailValue ? '✓' : '✗') :
+                           typeof detailValue === 'object' ? 'Ver detalhes' :
+                           detailValue}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div
+                      className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${metric.value}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-md p-8`}>
+            <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-8`}>Relatórios e Exportações</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <button
+                onClick={() => handleExport('excel')}
+                className="p-8 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-xl transition-all text-left border-2 border-green-200 dark:border-green-700"
+              >
+                <div className="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mb-4">
+                  <span className="text-4xl">📊</span>
+                </div>
+                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Excel / CSV</h3>
+                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Exportar todos os dados em formato tabular para análise detalhada
+                </p>
+              </button>
+
+              <button
+                onClick={() => handleExport('pdf')}
+                className="p-8 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 dark:from-red-900/30 dark:to-red-800/30 rounded-xl transition-all text-left border-2 border-red-200 dark:border-red-700"
+              >
+                <div className="w-16 h-16 bg-red-500 rounded-xl flex items-center justify-center mb-4">
+                  <span className="text-4xl">📄</span>
+                </div>
+                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Relatório PDF</h3>
+                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Relatório completo formatado com todas as métricas e gráficos
+                </p>
+              </button>
+
+              <button
+                onClick={() => handleExport('presentation')}
+                className="p-8 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl transition-all text-left border-2 border-purple-200 dark:border-purple-700"
+              >
+                <div className="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mb-4">
+                  <span className="text-4xl">📊</span>
+                </div>
+                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Apresentação Executiva</h3>
+                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Resumo executivo com principais KPIs e highlights
+                </p>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Add Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-slideUp">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Adicionar Emissões</h2>
+      {/* Modal de Formulário */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8`}>
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-inherit pb-4 border-b dark:border-gray-700">
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Adicionar Dados - {showModal === 'environmental' ? 'Ambiental' : showModal === 'social' ? 'Social' : 'Governança'}
+              </h2>
               <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => setShowModal(null)}
+                className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -412,48 +876,41 @@ function App() {
               </button>
             </div>
 
-            <form onSubmit={handleAddEmission} className="space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Período</label>
-                <input
-                  type="text"
-                  value={newEmission.month}
-                  onChange={(e) => setNewEmission({...newEmission, month: e.target.value})}
-                  placeholder="Ex: Jun, Jul, Ago..."
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium"
-                  required
-                />
+            <form onSubmit={(e) => handleFormSubmit(e, showModal)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Object.entries(esgData[showModal].metrics).map(([metricKey, metric]) => (
+                  <div key={metricKey} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                    <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2`}>
+                      {metric.name}
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder={`Valor atual: ${metric.value}`}
+                      className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                        darkMode
+                          ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400'
+                          : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                      } focus:ring-2 focus:ring-blue-500/50`}
+                      onChange={(e) => setFormData({...formData, [metricKey]: { ...metric, value: Number(e.target.value) }})}
+                    />
+                    <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Peso: {(metric.weight * 100).toFixed(0)}% • Status: {metric.status}
+                    </p>
+                  </div>
+                ))}
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Emissões (toneladas)</label>
-                <input
-                  type="number"
-                  value={newEmission.value}
-                  onChange={(e) => setNewEmission({...newEmission, value: e.target.value})}
-                  placeholder="Ex: 12000"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Meta (toneladas)</label>
-                <input
-                  type="number"
-                  value={newEmission.target}
-                  onChange={(e) => setNewEmission({...newEmission, target: e.target.value})}
-                  placeholder="Ex: 13000"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium"
-                  required
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
+              <div className="flex space-x-3 pt-4 border-t dark:border-gray-700">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-bold"
+                  onClick={() => setShowModal(null)}
+                  className={`flex-1 px-4 py-3 border-2 rounded-lg transition-all font-bold ${
+                    darkMode
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
                   Cancelar
                 </button>
@@ -461,7 +918,7 @@ function App() {
                   type="submit"
                   className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-bold shadow-lg hover:shadow-xl"
                 >
-                  Adicionar
+                  Salvar Dados
                 </button>
               </div>
             </form>
@@ -469,15 +926,15 @@ function App() {
         </div>
       )}
 
-      {/* Export Modal */}
+      {/* Modal de Exportação */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-2xl max-w-md w-full p-8`}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Exportar Relatório</h2>
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Exportar Relatório</h2>
               <button
                 onClick={() => setShowExportModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -487,51 +944,59 @@ function App() {
 
             <div className="space-y-3">
               <button
-                onClick={() => handleExport('pdf')}
-                className="w-full px-6 py-4 bg-red-50 hover:bg-red-100 rounded-lg transition-all text-left flex items-center space-x-4"
+                onClick={() => handleExport('excel')}
+                className={`w-full px-6 py-4 rounded-lg transition-all text-left flex items-center space-x-4 ${
+                  darkMode
+                    ? 'bg-green-900/30 hover:bg-green-900/50 border border-green-700'
+                    : 'bg-green-50 hover:bg-green-100'
+                }`}
               >
-                <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">📄</span>
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">📊</span>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">Exportar PDF</p>
-                  <p className="text-sm text-gray-600">Relatório completo formatado</p>
+                  <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Exportar Excel/CSV</p>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Dados tabulares para análise</p>
                 </div>
               </button>
 
               <button
-                onClick={() => handleExport('excel')}
-                className="w-full px-6 py-4 bg-green-50 hover:bg-green-100 rounded-lg transition-all text-left flex items-center space-x-4"
+                onClick={() => handleExport('pdf')}
+                className={`w-full px-6 py-4 rounded-lg transition-all text-left flex items-center space-x-4 ${
+                  darkMode
+                    ? 'bg-red-900/30 hover:bg-red-900/50 border border-red-700'
+                    : 'bg-red-50 hover:bg-red-100'
+                }`}
               >
-                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl">📄</span>
+                </div>
+                <div>
+                  <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Exportar PDF</p>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Relatório completo formatado</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleExport('presentation')}
+                className={`w-full px-6 py-4 rounded-lg transition-all text-left flex items-center space-x-4 ${
+                  darkMode
+                    ? 'bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700'
+                    : 'bg-purple-50 hover:bg-purple-100'
+                }`}
+              >
+                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
                   <span className="text-2xl">📊</span>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">Exportar Excel/CSV</p>
-                  <p className="text-sm text-gray-600">Dados tabulares para análise</p>
+                  <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Apresentação Executiva</p>
+                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Resumo com principais KPIs</p>
                 </div>
               </button>
             </div>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-      `}</style>
     </div>
   )
 }
