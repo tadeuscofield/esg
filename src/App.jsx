@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import emailjs from '@emailjs/browser'
 
 function App() {
@@ -410,12 +410,12 @@ function App() {
 
     const pillarData = [
       ['Pilar', 'Score', 'Peso', 'Contribuição'],
-      ['🌱 Ambiental', `${esgData.environmental.score}/100`, '35%', `${(esgData.environmental.score * 0.35).toFixed(1)}`],
-      ['👥 Social', `${esgData.social.score}/100`, '30%', `${(esgData.social.score * 0.30).toFixed(1)}`],
-      ['⚖️ Governança', `${esgData.governance.score}/100`, '35%', `${(esgData.governance.score * 0.35).toFixed(1)}`]
+      ['Ambiental', `${esgData.environmental.score}/100`, '35%', `${(esgData.environmental.score * 0.35).toFixed(1)}`],
+      ['Social', `${esgData.social.score}/100`, '30%', `${(esgData.social.score * 0.30).toFixed(1)}`],
+      ['Governança', `${esgData.governance.score}/100`, '35%', `${(esgData.governance.score * 0.35).toFixed(1)}`]
     ]
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 105,
       head: [pillarData[0]],
       body: pillarData.slice(1),
@@ -442,7 +442,7 @@ function App() {
       metric.status
     ])
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 35,
       head: [['Métrica', 'Valor', 'Peso', 'Status']],
       body: envMetrics,
@@ -476,7 +476,7 @@ function App() {
       metric.status
     ])
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 35,
       head: [['Métrica', 'Valor', 'Peso', 'Status']],
       body: socialMetrics,
@@ -510,7 +510,7 @@ function App() {
       metric.status
     ])
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: 35,
       head: [['Métrica', 'Valor', 'Peso', 'Status']],
       body: govMetrics,
@@ -540,6 +540,7 @@ function App() {
   }
 
   const handleExport = (format) => {
+    console.log('handleExport called with format:', format)
     const timestamp = new Date().toISOString().split('T')[0]
 
     if (format === 'excel') {
@@ -564,16 +565,24 @@ function App() {
       setShowExportModal(false)
 
     } else if (format === 'pdf') {
-      const doc = generatePDF()
-      doc.save(`ESG-Report-${timestamp}.pdf`)
-      setShowExportModal(false)
+      console.log('Generating PDF...')
+      try {
+        const doc = generatePDF()
+        console.log('PDF generated, saving...')
+        doc.save(`ESG-Report-${timestamp}.pdf`)
+        console.log('PDF saved successfully')
+        setShowExportModal(false)
 
-      // Perguntar se quer enviar por email
-      setTimeout(() => {
-        if (confirm('PDF gerado com sucesso! Deseja enviar por email?')) {
-          setShowEmailModal(true)
-        }
-      }, 500)
+        // Perguntar se quer enviar por email
+        setTimeout(() => {
+          if (confirm('PDF gerado com sucesso! Deseja enviar por email?')) {
+            setShowEmailModal(true)
+          }
+        }, 500)
+      } catch (error) {
+        console.error('Error generating PDF:', error)
+        alert('Erro ao gerar PDF: ' + error.message)
+      }
     }
   }
 
