@@ -1908,60 +1908,202 @@ function App() {
 
               <form onSubmit={(e) => handleDetailedFormSubmit(e, category, metricKey)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Object.entries(metric.details).map(([detailKey, detailValue]) => (
-                    <div key={detailKey} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2 capitalize`}>
-                        {detailKey.replace(/([A-Z])/g, ' $1').trim()}
-                      </label>
+                  {Object.entries(metric.details).map(([detailKey, detailValue]) => {
+                    // Tradução de labels
+                    const translations = {
+                      physicalRisk: 'Risco Físico',
+                      transitionRisk: 'Risco de Transição',
+                      netZeroTarget: 'Meta Net Zero (Ano)',
+                      scienceBasedTarget: 'Meta Baseada em Ciência (SBT)',
+                      tcfdAligned: 'Alinhado com TCFD',
+                      scope1: 'Scope 1 (tCO2e)',
+                      scope2Market: 'Scope 2 Market (tCO2e)',
+                      scope3: 'Scope 3',
+                      intensity: 'Intensidade',
+                      reductionYoY: 'Redução Anual (%)',
+                      baselineYear: 'Ano Base',
+                      offsetPercentage: 'Percentual de Offset (%)',
+                      recyclingRate: 'Taxa de Reciclagem (%)',
+                      recyclableContent: 'Conteúdo Reciclável (%)',
+                      hazardousWaste: 'Resíduos Perigosos (ton)',
+                      wasteToLandfill: 'Resíduos para Aterro (ton)',
+                      circularityScore: 'Score de Circularidade',
+                      totalConsumption: 'Consumo Total (m³)',
+                      reuseRate: 'Taxa de Reuso (%)',
+                      recycleRate: 'Taxa de Reciclagem (%)',
+                      waterStressPercentage: 'Áreas de Stress Hídrico (%)',
+                      wastewaterTreated: 'Águas Residuais Tratadas (%)',
+                      cdpWaterScore: 'CDP Water Score',
+                      biodiversityFootprint: 'Pegada de Biodiversidade',
+                      protectedAreasImpacted: 'Áreas Protegidas Impactadas',
+                      restorationProjects: 'Projetos de Restauração',
+                      restorationHectares: 'Hectares Restaurados',
+                      tnfdAligned: 'Alinhado com TNFD',
+                      sbtForNature: 'SBT para Natureza',
+                      suppliersTotal: 'Total de Fornecedores',
+                      tier1Audited: 'Tier 1 Auditados (%)',
+                      highRiskSuppliers: 'Fornecedores de Alto Risco',
+                      violations: 'Violações',
+                      sa8000Certified: 'Certificado SA8000',
+                      humanRightsPolicy: 'Política de Direitos Humanos',
+                      grievanceMechanism: 'Canal de Denúncias',
+                      womenTotal: 'Mulheres Total (%)',
+                      womenLeadership: 'Mulheres em Liderança (%)',
+                      womenBoard: 'Mulheres no Conselho (%)',
+                      genderPayGap: 'Gap Salarial de Gênero (%)',
+                      inclusionScore: 'Score de Inclusão (0-10)',
+                      lgbtqPolicies: 'Políticas LGBTQ+',
+                      disabilityInclusion: 'Inclusão de PCDs (%)',
+                      parentalLeave: 'Licença Parental',
+                      localEmployment: 'Emprego Local (%)',
+                      localSuppliers: 'Fornecedores Locais (%)',
+                      socialInvestment: 'Investimento Social (R$)',
+                      volunteerHours: 'Horas de Voluntariado',
+                      sroi: 'SROI',
+                      beneficiaries: 'Beneficiários',
+                      educationPrograms: 'Programas Educacionais',
+                      satisfactionScore: 'Score de Satisfação (0-10)',
+                      burnoutRate: 'Taxa de Burnout (%)',
+                      eNPS: 'eNPS (-100 a 100)',
+                      engagementScore: 'Score de Engajamento (%)',
+                      turnover: 'Turnover (%)',
+                      voluntaryTurnover: 'Turnover Voluntário (%)',
+                      averageTenure: 'Tempo Médio de Casa (anos)',
+                      healthInsurance: 'Plano de Saúde',
+                      retirementPlan: 'Plano de Aposentadoria',
+                      remoteWork: 'Trabalho Remoto',
+                      flexibleHours: 'Horário Flexível',
+                      ltifr: 'LTIFR',
+                      trifr: 'TRIFR',
+                      fatalities: 'Fatalidades',
+                      nearMisses: 'Quase Acidentes',
+                      safetyTrainingHours: 'Horas de Treinamento Segurança',
+                      safetyTrainingCoverage: 'Cobertura Treinamento (%)',
+                      iso45001: 'Certificado ISO 45001',
+                      behaviorBasedSafety: 'Segurança Baseada em Comportamento',
+                      compensationLinked: 'Remuneração Vinculada a ESG (%)',
+                      ceoCompensationESG: 'Remuneração CEO Vinculada (%)',
+                      ltipESGMetrics: 'LTIP com Métricas ESG',
+                      esgCommittee: 'Comitê ESG',
+                      strategyIntegrated: 'Estratégia Integrada',
+                      materialityAssessment: 'Avaliação de Materialidade',
+                      publicTargets: 'Metas Públicas',
+                      boardSize: 'Tamanho do Conselho',
+                      independentDirectors: 'Diretores Independentes (%)',
+                      nonExecutive: 'Não Executivos (%)',
+                      averageTenure: 'Tempo Médio Mandato (anos)',
+                      boardEvaluations: 'Avaliações do Conselho',
+                      successionPlanning: 'Planejamento Sucessório',
+                      boardMeetings: 'Reuniões do Conselho/Ano',
+                      attendance: 'Presença (%)',
+                      msciScore: 'Score MSCI',
+                      sustainalyticsRisk: 'Risco Sustainalytics',
+                      cdpClimate: 'CDP Climate',
+                      disclosureScore: 'Score de Disclosure (%)',
+                      integratedReporting: 'Relatório Integrado',
+                      tcfdReport: 'Relatório TCFD',
+                      sasbStandards: 'Padrões SASB',
+                      externalAssurance: 'Auditoria Externa',
+                      dataBreaches: 'Violações de Dados',
+                      breachSeverity: 'Gravidade de Violações',
+                      cyberInsurance: 'Seguro Cibernético',
+                      iso27001: 'Certificado ISO 27001',
+                      gdprCompliant: 'Conforme GDPR',
+                      lgpdCompliant: 'Conforme LGPD',
+                      aiEthicsPolicy: 'Política de Ética em IA',
+                      cyberTraining: 'Treinamento Cyber (%)',
+                      ethicsTraining: 'Treinamento Ética (%)',
+                      fines: 'Multas',
+                      fineAmount: 'Valor de Multas (R$)',
+                      investigations: 'Investigações',
+                      litigations: 'Litigações',
+                      codeOfConduct: 'Código de Conduta',
+                      anticorruptionPolicy: 'Política Anticorrupção',
+                      whistleblowerChannel: 'Canal de Denúncias',
+                      whistleblowerCases: 'Casos de Denúncia',
+                      complianceTraining: 'Treinamento Compliance (%)',
+                      anticorruptionTraining: 'Treinamento Anticorrupção (%)'
+                    }
 
-                      {typeof detailValue === 'boolean' ? (
-                        <div className="flex items-center space-x-3">
+                    const label = translations[detailKey] || detailKey.replace(/([A-Z])/g, ' $1').trim()
+
+                    // Campos que devem ser dropdowns
+                    const dropdownFields = {
+                      biodiversityFootprint: ['Low', 'Medium', 'High'],
+                      sustainalyticsRisk: ['Negligible', 'Low', 'Medium', 'High', 'Severe'],
+                      breachSeverity: ['None', 'Low', 'Medium', 'High', 'Critical']
+                    }
+
+                    // Não renderizar objetos aninhados (scope3, intensity, parentalLeave)
+                    if (typeof detailValue === 'object' && detailValue !== null && !Array.isArray(detailValue)) {
+                      return null
+                    }
+
+                    return (
+                      <div key={detailKey} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                        <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2`}>
+                          {label}
+                        </label>
+
+                        {dropdownFields[detailKey] ? (
+                          <select
+                            defaultValue={detailValue}
+                            className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                              darkMode
+                                ? 'bg-gray-600 border-gray-500 text-white focus:border-blue-400'
+                                : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                            } focus:ring-2 focus:ring-blue-500/50`}
+                            onChange={(e) => setFormData({...formData, [detailKey]: e.target.value})}
+                          >
+                            {dropdownFields[detailKey].map(option => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        ) : typeof detailValue === 'boolean' ? (
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="checkbox"
+                              defaultChecked={detailValue}
+                              className="w-5 h-5 rounded"
+                              onChange={(e) => setFormData({...formData, [detailKey]: e.target.checked})}
+                            />
+                            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {formData[detailKey] !== undefined ? (formData[detailKey] ? 'Sim' : 'Não') : (detailValue ? 'Sim' : 'Não')}
+                            </span>
+                          </div>
+                        ) : typeof detailValue === 'number' ? (
                           <input
-                            type="checkbox"
-                            defaultChecked={detailValue}
-                            className="w-5 h-5 rounded"
-                            onChange={(e) => setFormData({...formData, [detailKey]: e.target.checked})}
+                            type="number"
+                            step="0.01"
+                            defaultValue={detailValue}
+                            placeholder={`Valor atual: ${detailValue}`}
+                            className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                              darkMode
+                                ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400'
+                                : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                            } focus:ring-2 focus:ring-blue-500/50`}
+                            onChange={(e) => setFormData({...formData, [detailKey]: Number(e.target.value)})}
                           />
-                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            {formData[detailKey] !== undefined ? (formData[detailKey] ? 'Sim' : 'Não') : (detailValue ? 'Sim' : 'Não')}
-                          </span>
-                        </div>
-                      ) : typeof detailValue === 'number' ? (
-                        <input
-                          type="number"
-                          step="0.01"
-                          defaultValue={detailValue}
-                          placeholder={`Valor atual: ${detailValue}`}
-                          className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
-                            darkMode
-                              ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400'
-                              : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                          } focus:ring-2 focus:ring-blue-500/50`}
-                          onChange={(e) => setFormData({...formData, [detailKey]: Number(e.target.value)})}
-                        />
-                      ) : typeof detailValue === 'string' ? (
-                        <input
-                          type="text"
-                          defaultValue={detailValue}
-                          placeholder={`Valor atual: ${detailValue}`}
-                          className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
-                            darkMode
-                              ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400'
-                              : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-                          } focus:ring-2 focus:ring-blue-500/50`}
-                          onChange={(e) => setFormData({...formData, [detailKey]: e.target.value})}
-                        />
-                      ) : (
-                        <div className={`px-4 py-3 rounded-lg ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
-                          <span className="text-sm">Tipo complexo - edição não suportada nesta versão</span>
-                        </div>
-                      )}
+                        ) : typeof detailValue === 'string' ? (
+                          <input
+                            type="text"
+                            defaultValue={detailValue}
+                            placeholder={`Valor atual: ${detailValue}`}
+                            className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                              darkMode
+                                ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400'
+                                : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                            } focus:ring-2 focus:ring-blue-500/50`}
+                            onChange={(e) => setFormData({...formData, [detailKey]: e.target.value})}
+                          />
+                        ) : null}
 
-                      <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Valor atual: {typeof detailValue === 'boolean' ? (detailValue ? '✓ Sim' : '✗ Não') : detailValue}
-                      </p>
-                    </div>
-                  ))}
+                        <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Valor atual: {typeof detailValue === 'boolean' ? (detailValue ? '✓ Sim' : '✗ Não') : detailValue?.toString ? detailValue.toString() : detailValue}
+                        </p>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className={`p-4 rounded-lg ${darkMode ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
