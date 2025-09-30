@@ -329,19 +329,32 @@ function App() {
     let totalScore = 0
     let totalWeight = 0
 
+    console.log('=== CALCULATING PILLAR SCORE ===')
+    console.log('Metrics:', metrics)
+
     Object.values(metrics).forEach(metric => {
       if (metric.value !== undefined && metric.weight !== undefined) {
+        console.log(`Metric: ${metric.name}, value: ${metric.value}, weight: ${metric.weight}`)
         totalScore += metric.value * metric.weight
         totalWeight += metric.weight
       }
     })
 
-    return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
+    const finalScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
+    console.log(`Total Score: ${totalScore}, Total Weight: ${totalWeight}, Final: ${finalScore}`)
+    console.log('=================================')
+
+    return finalScore
   }
 
   // Função para salvar dados do formulário
   const handleFormSubmit = (e, category) => {
     e.preventDefault()
+
+    console.log('=== HANDLE FORM SUBMIT ===')
+    console.log('Category:', category)
+    console.log('Form Data:', formData)
+    console.log('Current metrics:', esgData[category].metrics)
 
     // Mesclar formData com métricas existentes
     const updatedMetrics = {
@@ -349,18 +362,26 @@ function App() {
       ...formData
     }
 
+    console.log('Updated Metrics:', updatedMetrics)
+
     // Calcular novo score do pilar
     const newScore = calculatePillarScore(updatedMetrics)
 
+    console.log('New Score calculated:', newScore)
+
     // Atualizar dados no estado com score recalculado
-    setEsgData(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        score: newScore,
-        metrics: updatedMetrics
+    setEsgData(prev => {
+      const newData = {
+        ...prev,
+        [category]: {
+          ...prev[category],
+          score: newScore,
+          metrics: updatedMetrics
+        }
       }
-    }))
+      console.log('New esgData:', newData)
+      return newData
+    })
 
     setShowModal(null)
     setFormData({})
@@ -745,6 +766,22 @@ function App() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Logout Button */}
+              <button
+                onClick={() => {
+                  if (confirm('Deseja realmente sair e limpar todos os dados?')) {
+                    setCompanyInfo({ name: '', sector: '', technicalResponsible: '', email: '' })
+                    setShowCompanyModal(true)
+                  }
+                }}
+                className={`p-2.5 rounded-lg transition-all ${darkMode ? 'bg-gray-700 text-red-400 hover:bg-gray-600' : 'bg-gray-100 text-red-600 hover:bg-gray-200'}`}
+                title="Sair e limpar dados"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+
               {/* Methodology Button */}
               <button
                 onClick={() => setShowMethodologyModal(true)}
