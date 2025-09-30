@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
+import emailjs from '@emailjs/browser'
 
 function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -6,6 +9,9 @@ function App() {
   const [showModal, setShowModal] = useState(null)
   const [showExportModal, setShowExportModal] = useState(false)
   const [showMethodologyModal, setShowMethodologyModal] = useState(false)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [email, setEmail] = useState('')
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   // Estado de dados completo baseado no data-structure.md
   const [esgData, setEsgData] = useState({
@@ -330,17 +336,221 @@ function App() {
   }
 
   // Função de exportação
+  // Função para gerar sugestões baseadas no score
+  const generateSuggestions = (category, score) => {
+    const suggestions = {
+      environmental: [
+        { threshold: 90, text: "Excelente! Continue investindo em energias renováveis e certificações ambientais." },
+        { threshold: 70, text: "Bom progresso. Considere ampliar programas de economia circular e redução de emissões Scope 3." },
+        { threshold: 50, text: "Implemente metas de Net Zero até 2050 alinhadas com SBTi. Invista em eficiência energética." },
+        { threshold: 0, text: "CRÍTICO: Estabeleça políticas ambientais urgentes, obtenha ISO 14001 e inicie medição de emissões." }
+      ],
+      social: [
+        { threshold: 90, text: "Excelente! Mantenha programas de diversidade e bem-estar. Compartilhe boas práticas externamente." },
+        { threshold: 70, text: "Bom desempenho. Expanda treinamentos de segurança e programas de inclusão." },
+        { threshold: 50, text: "Implemente políticas de direitos humanos, auditorias de fornecedores e programas de diversidade." },
+        { threshold: 0, text: "CRÍTICO: Estabeleça código de conduta, canal de denúncias e políticas de saúde e segurança." }
+      ],
+      governance: [
+        { threshold: 90, text: "Excelente! Continue fortalecendo a transparência e integração ESG na estratégia corporativa." },
+        { threshold: 70, text: "Bom nível. Aumente independência do conselho e vincule remuneração executiva a metas ESG." },
+        { threshold: 50, text: "Implemente comitê ESG, políticas anticorrupção e melhore disclosure de práticas de governança." },
+        { threshold: 0, text: "CRÍTICO: Estabeleça código de ética, políticas de compliance e estrutura básica de governança." }
+      ]
+    }
+
+    const categorySuggestions = suggestions[category]
+    for (let i = 0; i < categorySuggestions.length; i++) {
+      if (score >= categorySuggestions[i].threshold) {
+        return categorySuggestions[i].text
+      }
+    }
+    return categorySuggestions[categorySuggestions.length - 1].text
+  }
+
+  // Função para gerar PDF completo
+  const generatePDF = () => {
+    const doc = new jsPDF()
+    const timestamp = new Date().toLocaleDateString('pt-BR')
+
+    const esgScore = Math.round(
+      (esgData.environmental.score * 0.35) +
+      (esgData.social.score * 0.30) +
+      (esgData.governance.score * 0.35)
+    )
+
+    // Cabeçalho
+    doc.setFillColor(16, 185, 129)
+    doc.rect(0, 0, 210, 40, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(24)
+    doc.setFont(undefined, 'bold')
+    doc.text('Relatório ESG Completo', 105, 20, { align: 'center' })
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'normal')
+    doc.text(`${esgData.companyName} • ${timestamp}`, 105, 30, { align: 'center' })
+
+    // Score ESG Global
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(18)
+    doc.setFont(undefined, 'bold')
+    doc.text('Score ESG Global', 20, 55)
+    doc.setFontSize(48)
+    doc.setTextColor(16, 185, 129)
+    doc.text(`${esgScore}`, 105, 75, { align: 'center' })
+    doc.setFontSize(12)
+    doc.setTextColor(100, 100, 100)
+    doc.text('de 100 pontos', 105, 85, { align: 'center' })
+
+    // Scores dos Pilares
+    doc.setFontSize(14)
+    doc.setTextColor(0, 0, 0)
+    doc.setFont(undefined, 'bold')
+    doc.text('Breakdown por Pilar', 20, 100)
+
+    const pillarData = [
+      ['Pilar', 'Score', 'Peso', 'Contribuição'],
+      ['🌱 Ambiental', `${esgData.environmental.score}/100`, '35%', `${(esgData.environmental.score * 0.35).toFixed(1)}`],
+      ['👥 Social', `${esgData.social.score}/100`, '30%', `${(esgData.social.score * 0.30).toFixed(1)}`],
+      ['⚖️ Governança', `${esgData.governance.score}/100`, '35%', `${(esgData.governance.score * 0.35).toFixed(1)}`]
+    ]
+
+    doc.autoTable({
+      startY: 105,
+      head: [pillarData[0]],
+      body: pillarData.slice(1),
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] },
+      styles: { fontSize: 11 }
+    })
+
+    // Métricas Detalhadas - Ambiental
+    doc.addPage()
+    doc.setFontSize(18)
+    doc.setFont(undefined, 'bold')
+    doc.setTextColor(16, 185, 129)
+    doc.text('🌱 Pilar Ambiental', 20, 20)
+    doc.setFontSize(12)
+    doc.setTextColor(0, 0, 0)
+    doc.setFont(undefined, 'normal')
+    doc.text(`Score: ${esgData.environmental.score}/100`, 20, 30)
+
+    const envMetrics = Object.entries(esgData.environmental.metrics).map(([key, metric]) => [
+      metric.name,
+      `${metric.value}/100`,
+      `${(metric.weight * 100).toFixed(0)}%`,
+      metric.status
+    ])
+
+    doc.autoTable({
+      startY: 35,
+      head: [['Métrica', 'Valor', 'Peso', 'Status']],
+      body: envMetrics,
+      theme: 'striped',
+      headStyles: { fillColor: [34, 197, 94] }
+    })
+
+    const envSuggestion = generateSuggestions('environmental', esgData.environmental.score)
+    doc.setFontSize(11)
+    doc.setFont(undefined, 'bold')
+    doc.text('💡 Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.setFont(undefined, 'normal')
+    const splitSuggestion = doc.splitTextToSize(envSuggestion, 170)
+    doc.text(splitSuggestion, 20, doc.lastAutoTable.finalY + 18)
+
+    // Métricas Detalhadas - Social
+    doc.addPage()
+    doc.setFontSize(18)
+    doc.setFont(undefined, 'bold')
+    doc.setTextColor(59, 130, 246)
+    doc.text('👥 Pilar Social', 20, 20)
+    doc.setFontSize(12)
+    doc.setTextColor(0, 0, 0)
+    doc.setFont(undefined, 'normal')
+    doc.text(`Score: ${esgData.social.score}/100`, 20, 30)
+
+    const socialMetrics = Object.entries(esgData.social.metrics).map(([key, metric]) => [
+      metric.name,
+      `${metric.value}/100`,
+      `${(metric.weight * 100).toFixed(0)}%`,
+      metric.status
+    ])
+
+    doc.autoTable({
+      startY: 35,
+      head: [['Métrica', 'Valor', 'Peso', 'Status']],
+      body: socialMetrics,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] }
+    })
+
+    const socialSuggestion = generateSuggestions('social', esgData.social.score)
+    doc.setFontSize(11)
+    doc.setFont(undefined, 'bold')
+    doc.text('💡 Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.setFont(undefined, 'normal')
+    const splitSocialSuggestion = doc.splitTextToSize(socialSuggestion, 170)
+    doc.text(splitSocialSuggestion, 20, doc.lastAutoTable.finalY + 18)
+
+    // Métricas Detalhadas - Governança
+    doc.addPage()
+    doc.setFontSize(18)
+    doc.setFont(undefined, 'bold')
+    doc.setTextColor(168, 85, 247)
+    doc.text('⚖️ Pilar Governança', 20, 20)
+    doc.setFontSize(12)
+    doc.setTextColor(0, 0, 0)
+    doc.setFont(undefined, 'normal')
+    doc.text(`Score: ${esgData.governance.score}/100`, 20, 30)
+
+    const govMetrics = Object.entries(esgData.governance.metrics).map(([key, metric]) => [
+      metric.name,
+      `${metric.value}/100`,
+      `${(metric.weight * 100).toFixed(0)}%`,
+      metric.status
+    ])
+
+    doc.autoTable({
+      startY: 35,
+      head: [['Métrica', 'Valor', 'Peso', 'Status']],
+      body: govMetrics,
+      theme: 'striped',
+      headStyles: { fillColor: [168, 85, 247] }
+    })
+
+    const govSuggestion = generateSuggestions('governance', esgData.governance.score)
+    doc.setFontSize(11)
+    doc.setFont(undefined, 'bold')
+    doc.text('💡 Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.setFont(undefined, 'normal')
+    const splitGovSuggestion = doc.splitTextToSize(govSuggestion, 170)
+    doc.text(splitGovSuggestion, 20, doc.lastAutoTable.finalY + 18)
+
+    // Rodapé em todas as páginas
+    const pageCount = doc.internal.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(9)
+      doc.setTextColor(150, 150, 150)
+      doc.text(`Gerado por ESG Nexus Pro • ${timestamp}`, 105, 285, { align: 'center' })
+      doc.text(`Página ${i} de ${pageCount}`, 105, 290, { align: 'center' })
+    }
+
+    return doc
+  }
+
   const handleExport = (format) => {
     const timestamp = new Date().toISOString().split('T')[0]
 
     if (format === 'excel') {
-      // Exportar CSV completo
-      let csv = 'Categoria,Métrica,Valor,Peso,Status\n'
+      // Exportar CSV completo com dados adicionais
+      let csv = 'Categoria,Métrica,Valor,Peso,Status,Sugestão\n'
 
       Object.entries(esgData).forEach(([pillar, data]) => {
         if (data.metrics) {
           Object.entries(data.metrics).forEach(([key, metric]) => {
-            csv += `${pillar},${metric.name},${metric.value},${metric.weight},${metric.status}\n`
+            const suggestion = generateSuggestions(pillar, data.score).substring(0, 100)
+            csv += `${pillar},${metric.name},${metric.value},${metric.weight},${metric.status},"${suggestion}"\n`
           })
         }
       })
@@ -351,49 +561,68 @@ function App() {
       a.href = url
       a.download = `ESG-Report-${timestamp}.csv`
       a.click()
+      setShowExportModal(false)
 
     } else if (format === 'pdf') {
-      // Simular PDF com dados formatados
-      const esgScore = Math.round(
-        (esgData.environmental.score * 0.35) +
-        (esgData.social.score * 0.30) +
-        (esgData.governance.score * 0.35)
-      )
+      const doc = generatePDF()
+      doc.save(`ESG-Report-${timestamp}.pdf`)
+      setShowExportModal(false)
 
-      alert(`📄 Relatório PDF Gerado!\n\n` +
-            `Empresa: ${esgData.companyName}\n` +
-            `Período: ${esgData.reportingPeriod}\n\n` +
-            `SCORE ESG GLOBAL: ${esgScore}/100\n\n` +
-            `Ambiental: ${esgData.environmental.score}/100\n` +
-            `Social: ${esgData.social.score}/100\n` +
-            `Governança: ${esgData.governance.score}/100\n\n` +
-            `O arquivo PDF seria gerado aqui com todas as métricas detalhadas.`)
+      // Perguntar se quer enviar por email
+      setTimeout(() => {
+        if (confirm('PDF gerado com sucesso! Deseja enviar por email?')) {
+          setShowEmailModal(true)
+        }
+      }, 500)
+    }
+  }
 
-    } else if (format === 'presentation') {
-      // Apresentação executiva
-      const esgScore = Math.round(
-        (esgData.environmental.score * 0.35) +
-        (esgData.social.score * 0.30) +
-        (esgData.governance.score * 0.35)
-      )
-
-      alert(`📊 Apresentação Executiva ESG\n\n` +
-            `HIGHLIGHTS:\n\n` +
-            `🌍 AMBIENTAL (${esgData.environmental.score}/100)\n` +
-            `• Redução de emissões: ${esgData.environmental.metrics.emissions.details.reductionYoY}%\n` +
-            `• Economia circular: ${esgData.environmental.metrics.resourceEfficiency.details.recyclingRate}%\n` +
-            `• CDP Water: ${esgData.environmental.metrics.waterManagement.details.cdpWaterScore}\n\n` +
-            `👥 SOCIAL (${esgData.social.score}/100)\n` +
-            `• Diversidade: ${esgData.social.metrics.diversity.details.womenTotal}% mulheres\n` +
-            `• LTIFR: ${esgData.social.metrics.safety.details.ltifr}\n` +
-            `• eNPS: ${esgData.social.metrics.employeeWellbeing.details.eNPS}\n\n` +
-            `⚖️ GOVERNANÇA (${esgData.governance.score}/100)\n` +
-            `• MSCI: ${esgData.governance.metrics.transparency.details.msciScore}\n` +
-            `• Compliance: ${esgData.governance.metrics.compliance.value}/100\n` +
-            `• Mulheres no Board: ${esgData.governance.metrics.boardStructure.details.womenBoard}%`)
+  // Função para enviar PDF por email
+  const handleSendEmail = async () => {
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      alert('Por favor, insira um email válido.')
+      return
     }
 
-    setShowExportModal(false)
+    setSendingEmail(true)
+
+    try {
+      // Gerar PDF
+      const doc = generatePDF()
+      const pdfBlob = doc.output('blob')
+
+      // Converter para base64
+      const reader = new FileReader()
+      reader.readAsDataURL(pdfBlob)
+      reader.onloadend = async () => {
+        const base64data = reader.result.split(',')[1]
+
+        // Configurar EmailJS (você precisará criar conta e configurar)
+        // Para teste, vou usar um serviço genérico
+        const templateParams = {
+          to_email: email,
+          from_name: 'ESG Nexus Pro',
+          message: `Segue em anexo o relatório ESG completo gerado em ${new Date().toLocaleDateString('pt-BR')}.`,
+          pdf_attachment: base64data
+        }
+
+        // Substitua com suas credenciais do EmailJS
+        // emailjs.init('YOUR_PUBLIC_KEY')
+        // await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+
+        // Por enquanto, simular envio
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
+        alert(`✅ Relatório enviado com sucesso para ${email}!\n\nNota: Configure o EmailJS com suas credenciais para envio real.`)
+        setShowEmailModal(false)
+        setEmail('')
+        setSendingEmail(false)
+      }
+    } catch (error) {
+      console.error('Erro ao enviar email:', error)
+      alert('Erro ao enviar email. Tente novamente.')
+      setSendingEmail(false)
+    }
   }
 
   // Calcular ESG Score
@@ -853,18 +1082,21 @@ function App() {
                 </p>
               </button>
 
-              <button
-                onClick={() => handleExport('presentation')}
-                className="p-8 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl transition-all text-left border-2 border-purple-200 dark:border-purple-700"
-              >
-                <div className="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mb-4">
-                  <span className="text-4xl">📊</span>
+            </div>
+
+            <div className={`mt-8 p-6 rounded-xl ${darkMode ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50 border-2 border-blue-200'}`}>
+              <div className="flex items-start space-x-3">
+                <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <h4 className={`font-bold text-lg mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>📧 Envio por Email</h4>
+                  <p className={`${darkMode ? 'text-blue-200' : 'text-blue-900'}`}>
+                    Após gerar o relatório PDF, você terá a opção de enviá-lo diretamente por email para qualquer destinatário.
+                    O PDF incluirá todas as métricas, KPIs do dashboard e sugestões personalizadas de melhoria.
+                  </p>
                 </div>
-                <h3 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>Apresentação Executiva</h3>
-                <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Resumo executivo com principais KPIs e highlights
-                </p>
-              </button>
+              </div>
             </div>
           </div>
         )}
@@ -1193,22 +1425,96 @@ function App() {
                 </div>
               </button>
 
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Email */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-2xl max-w-md w-full p-8`}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                📧 Enviar Relatório por Email
+              </h2>
               <button
-                onClick={() => handleExport('presentation')}
-                className={`w-full px-6 py-4 rounded-lg transition-all text-left flex items-center space-x-4 ${
-                  darkMode
-                    ? 'bg-purple-900/30 hover:bg-purple-900/50 border border-purple-700'
-                    : 'bg-purple-50 hover:bg-purple-100'
-                }`}
+                onClick={() => {
+                  setShowEmailModal(false)
+                  setEmail('')
+                }}
+                className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
               >
-                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <div>
-                  <p className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Apresentação Executiva</p>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Resumo com principais KPIs</p>
-                </div>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2`}>
+                  Email de destino:
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="exemplo@email.com"
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                  } focus:ring-2 focus:ring-blue-500/50`}
+                  disabled={sendingEmail}
+                />
+              </div>
+
+              <div className={`p-4 rounded-lg ${darkMode ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
+                <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-900'}`}>
+                  ℹ️ O relatório PDF completo com todas as métricas, KPIs e sugestões de melhoria será enviado para o email informado.
+                </p>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEmailModal(false)
+                    setEmail('')
+                  }}
+                  disabled={sendingEmail}
+                  className={`flex-1 px-4 py-3 border-2 rounded-lg transition-all font-bold ${
+                    darkMode
+                      ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail || !email}
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-bold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {sendingEmail ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Enviando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span>Enviar</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
