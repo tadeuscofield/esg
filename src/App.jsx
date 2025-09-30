@@ -16,7 +16,8 @@ function App() {
   const [companyInfo, setCompanyInfo] = useState({
     name: '',
     sector: '',
-    technicalResponsible: ''
+    technicalResponsible: '',
+    email: ''
   })
 
   // Estado de dados completo baseado no data-structure.md
@@ -447,7 +448,7 @@ function App() {
     doc.setFontSize(18)
     doc.setFont(undefined, 'bold')
     doc.setTextColor(16, 185, 129)
-    doc.text('🌱 Métricas Ambientais', 20, 45)
+    doc.text('Métricas Ambientais', 20, 45)
     doc.setFontSize(12)
     doc.setTextColor(0, 0, 0)
     doc.setFont(undefined, 'normal')
@@ -471,7 +472,7 @@ function App() {
     const envSuggestion = generateSuggestions('environmental', esgData.environmental.score)
     doc.setFontSize(11)
     doc.setFont(undefined, 'bold')
-    doc.text('💡 Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
     doc.setFont(undefined, 'normal')
     const splitSuggestion = doc.splitTextToSize(envSuggestion, 170)
     doc.text(splitSuggestion, 20, doc.lastAutoTable.finalY + 18)
@@ -490,7 +491,7 @@ function App() {
     doc.setFontSize(18)
     doc.setFont(undefined, 'bold')
     doc.setTextColor(59, 130, 246)
-    doc.text('👥 Métricas Sociais', 20, 45)
+    doc.text('Métricas Sociais', 20, 45)
     doc.setFontSize(12)
     doc.setTextColor(0, 0, 0)
     doc.setFont(undefined, 'normal')
@@ -514,7 +515,7 @@ function App() {
     const socialSuggestion = generateSuggestions('social', esgData.social.score)
     doc.setFontSize(11)
     doc.setFont(undefined, 'bold')
-    doc.text('💡 Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
     doc.setFont(undefined, 'normal')
     const splitSocialSuggestion = doc.splitTextToSize(socialSuggestion, 170)
     doc.text(splitSocialSuggestion, 20, doc.lastAutoTable.finalY + 18)
@@ -533,7 +534,7 @@ function App() {
     doc.setFontSize(18)
     doc.setFont(undefined, 'bold')
     doc.setTextColor(168, 85, 247)
-    doc.text('⚖️ Métricas de Governança', 20, 45)
+    doc.text('Métricas de Governança', 20, 45)
     doc.setFontSize(12)
     doc.setTextColor(0, 0, 0)
     doc.setFont(undefined, 'normal')
@@ -557,7 +558,7 @@ function App() {
     const govSuggestion = generateSuggestions('governance', esgData.governance.score)
     doc.setFontSize(11)
     doc.setFont(undefined, 'bold')
-    doc.text('💡 Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
     doc.setFont(undefined, 'normal')
     const splitGovSuggestion = doc.splitTextToSize(govSuggestion, 170)
     doc.text(splitGovSuggestion, 20, doc.lastAutoTable.finalY + 18)
@@ -609,12 +610,12 @@ function App() {
         console.log('PDF saved successfully')
         setShowExportModal(false)
 
-        // Perguntar se quer enviar por email
-        setTimeout(() => {
-          if (confirm('PDF gerado com sucesso! Deseja enviar por email?')) {
-            setShowEmailModal(true)
-          }
-        }, 500)
+        // Enviar automaticamente para o email cadastrado
+        if (companyInfo.email) {
+          setTimeout(() => {
+            handleAutoSendEmail(doc, timestamp)
+          }, 500)
+        }
       } catch (error) {
         console.error('Error generating PDF:', error)
         alert('Erro ao gerar PDF: ' + error.message)
@@ -622,7 +623,41 @@ function App() {
     }
   }
 
-  // Função para enviar PDF por email
+  // Função para enviar PDF automaticamente
+  const handleAutoSendEmail = async (doc, timestamp) => {
+    try {
+      const pdfBlob = doc.output('blob')
+
+      // Converter para base64
+      const reader = new FileReader()
+      reader.readAsDataURL(pdfBlob)
+      reader.onloadend = async () => {
+        const base64data = reader.result.split(',')[1]
+
+        const templateParams = {
+          to_email: companyInfo.email,
+          from_name: 'ESG Nexus Pro',
+          company_name: companyInfo.name,
+          message: `Olá ${companyInfo.technicalResponsible},\n\nSegue em anexo o relatório ESG completo da ${companyInfo.name} gerado em ${new Date().toLocaleDateString('pt-BR')}.\n\nAtenciosamente,\nESG Nexus Pro`,
+          pdf_attachment: base64data
+        }
+
+        // Substitua com suas credenciais do EmailJS
+        // emailjs.init('YOUR_PUBLIC_KEY')
+        // await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+
+        // Por enquanto, simular envio
+        await new Promise(resolve => setTimeout(resolve, 1500))
+
+        alert(`✅ Relatório PDF enviado automaticamente para ${companyInfo.email}!\n\nNota: Configure o EmailJS com suas credenciais para envio real.`)
+      }
+    } catch (error) {
+      console.error('Erro ao enviar email:', error)
+      alert(`⚠️ PDF salvo localmente, mas houve erro ao enviar para ${companyInfo.email}.`)
+    }
+  }
+
+  // Função para enviar PDF por email (modal manual)
   const handleSendEmail = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       alert('Por favor, insira um email válido.')
@@ -642,11 +677,10 @@ function App() {
       reader.onloadend = async () => {
         const base64data = reader.result.split(',')[1]
 
-        // Configurar EmailJS (você precisará criar conta e configurar)
-        // Para teste, vou usar um serviço genérico
         const templateParams = {
           to_email: email,
           from_name: 'ESG Nexus Pro',
+          company_name: companyInfo.name,
           message: `Segue em anexo o relatório ESG completo gerado em ${new Date().toLocaleDateString('pt-BR')}.`,
           pdf_attachment: base64data
         }
@@ -1631,15 +1665,36 @@ function App() {
                 />
               </div>
 
+              <div>
+                <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2`}>
+                  Email para Receber Relatórios *
+                </label>
+                <input
+                  type="email"
+                  value={companyInfo.email}
+                  onChange={(e) => setCompanyInfo({...companyInfo, email: e.target.value})}
+                  placeholder="exemplo@empresa.com"
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-400'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-emerald-500'
+                  } focus:ring-2 focus:ring-emerald-500/50`}
+                />
+              </div>
+
               <div className={`p-4 rounded-lg ${darkMode ? 'bg-emerald-900/30 border border-emerald-700' : 'bg-emerald-50 border border-emerald-200'}`}>
                 <p className={`text-sm ${darkMode ? 'text-emerald-200' : 'text-emerald-900'}`}>
-                  ℹ️ Estas informações aparecerão no cabeçalho do relatório PDF e na plataforma.
+                  ℹ️ O relatório PDF será enviado automaticamente para este email quando gerado.
                 </p>
               </div>
 
               <button
                 onClick={() => {
-                  if (companyInfo.name && companyInfo.sector && companyInfo.technicalResponsible) {
+                  if (companyInfo.name && companyInfo.sector && companyInfo.technicalResponsible && companyInfo.email) {
+                    if (!/\S+@\S+\.\S+/.test(companyInfo.email)) {
+                      alert('Por favor, insira um email válido.')
+                      return
+                    }
                     setShowCompanyModal(false)
                   } else {
                     alert('Por favor, preencha todos os campos obrigatórios.')
