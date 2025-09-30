@@ -400,6 +400,82 @@ function App() {
     return categorySuggestions[categorySuggestions.length - 1].text
   }
 
+  // Função para desenhar gráfico de barras no PDF
+  const drawBarChart = (doc, x, y, width, height, data, title) => {
+    // Título do gráfico
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text(title, x, y - 5)
+
+    // Borda do gráfico
+    doc.setDrawColor(200, 200, 200)
+    doc.rect(x, y, width, height)
+
+    // Calcular largura das barras
+    const barWidth = (width - (data.length + 1) * 10) / data.length
+    const maxValue = Math.max(...data.map(d => d.value))
+
+    data.forEach((item, index) => {
+      const barHeight = (item.value / 100) * (height - 20)
+      const barX = x + 10 + index * (barWidth + 10)
+      const barY = y + height - barHeight - 10
+
+      // Desenhar barra
+      doc.setFillColor(item.color[0], item.color[1], item.color[2])
+      doc.rect(barX, barY, barWidth, barHeight, 'F')
+
+      // Label do valor
+      doc.setFontSize(10)
+      doc.setFont(undefined, 'bold')
+      doc.setTextColor(0, 0, 0)
+      doc.text(`${item.value}`, barX + barWidth / 2, barY - 3, { align: 'center' })
+
+      // Label do nome
+      doc.setFontSize(8)
+      doc.setFont(undefined, 'normal')
+      doc.text(item.label, barX + barWidth / 2, y + height + 5, { align: 'center', maxWidth: barWidth })
+    })
+  }
+
+  // Função para desenhar gráfico de pizza/donut no PDF
+  const drawDonutChart = (doc, cx, cy, radius, data, title) => {
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text(title, cx, cy - radius - 10, { align: 'center' })
+
+    let startAngle = -90
+    const total = data.reduce((sum, item) => sum + item.value, 0)
+
+    data.forEach(item => {
+      const sliceAngle = (item.value / total) * 360
+      const endAngle = startAngle + sliceAngle
+
+      // Desenhar fatia
+      doc.setFillColor(item.color[0], item.color[1], item.color[2])
+
+      // Converter ângulos para radianos
+      const startRad = (startAngle * Math.PI) / 180
+      const endRad = (endAngle * Math.PI) / 180
+
+      // Desenhar arco
+      doc.circle(cx, cy, radius, 'F')
+
+      startAngle = endAngle
+    })
+
+    // Legenda
+    let legendY = cy + radius + 15
+    data.forEach(item => {
+      doc.setFillColor(item.color[0], item.color[1], item.color[2])
+      doc.rect(cx - 30, legendY - 3, 5, 5, 'F')
+      doc.setFontSize(9)
+      doc.setTextColor(0, 0, 0)
+      doc.setFont(undefined, 'normal')
+      doc.text(`${item.label}: ${item.value}% (${item.weight}%)`, cx - 22, legendY)
+      legendY += 7
+    })
+  }
+
   // Função para gerar PDF completo
   const generatePDF = () => {
     const doc = new jsPDF()
@@ -458,6 +534,14 @@ function App() {
       headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] },
       styles: { fontSize: 11 }
     })
+
+    // Gráfico de Barras - Comparação dos Pilares
+    const barChartData = [
+      { label: 'Ambiental', value: esgData.environmental.score, color: [34, 197, 94] },
+      { label: 'Social', value: esgData.social.score, color: [59, 130, 246] },
+      { label: 'Governança', value: esgData.governance.score, color: [168, 85, 247] }
+    ]
+    drawBarChart(doc, 20, 180, 170, 60, barChartData, 'Comparação Visual dos Pilares ESG')
 
     // Métricas Detalhadas - Ambiental
     doc.addPage()
