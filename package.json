@@ -99,7 +99,6 @@
     "react-copy-to-clipboard": "^5.1.0",
     "react-share": "^4.4.1",
     "react-qr-code": "^2.0.12",
-    "qrcode.js": "^1.0.0",
     "ethers": "^6.8.1",
     "web3": "^4.3.0",
     "socket.io-client": "^4.7.4",
