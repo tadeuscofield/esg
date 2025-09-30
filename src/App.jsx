@@ -623,10 +623,14 @@ function App() {
   }
 
   const handleExport = (format) => {
+    console.log('=======================================')
     console.log('handleExport called with format:', format)
+    console.log('Current esgData:', esgData)
+    console.log('Company Info:', companyInfo)
     const timestamp = new Date().toISOString().split('T')[0]
 
     if (format === 'excel') {
+      console.log('Exporting Excel...')
       // Exportar CSV completo com dados adicionais
       let csv = 'Categoria,Métrica,Valor,Peso,Status,Sugestão\n'
 
