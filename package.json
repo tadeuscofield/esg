@@ -187,7 +187,6 @@
     "storybook": "^7.5.3",
     "chromatic": "^8.0.0",
     "cypress": "^13.6.0",
-    "@cypress/react": "^8.0.0",
     "start-server-and-test": "^2.0.3",
     "percy-cypress": "^3.1.2",
     "lighthouse-ci": "^1.1.2",
