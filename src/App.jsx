@@ -12,6 +12,12 @@ function App() {
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [email, setEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
+  const [showCompanyModal, setShowCompanyModal] = useState(true)
+  const [companyInfo, setCompanyInfo] = useState({
+    name: '',
+    sector: '',
+    technicalResponsible: ''
+  })
 
   // Estado de dados completo baseado no data-structure.md
   const [esgData, setEsgData] = useState({
@@ -381,32 +387,35 @@ function App() {
 
     // Cabeçalho
     doc.setFillColor(16, 185, 129)
-    doc.rect(0, 0, 210, 40, 'F')
+    doc.rect(0, 0, 210, 50, 'F')
     doc.setTextColor(255, 255, 255)
-    doc.setFontSize(24)
+    doc.setFontSize(26)
     doc.setFont(undefined, 'bold')
-    doc.text('Relatório ESG Completo', 105, 20, { align: 'center' })
-    doc.setFontSize(12)
+    doc.text(companyInfo.name || 'Empresa', 105, 15, { align: 'center' })
+    doc.setFontSize(14)
+    doc.text('Relatório ESG Completo', 105, 25, { align: 'center' })
+    doc.setFontSize(11)
     doc.setFont(undefined, 'normal')
-    doc.text(`${esgData.companyName} • ${timestamp}`, 105, 30, { align: 'center' })
+    doc.text(`Setor: ${companyInfo.sector || 'N/A'} • Responsável: ${companyInfo.technicalResponsible || 'N/A'}`, 105, 33, { align: 'center' })
+    doc.text(`Data: ${timestamp}`, 105, 41, { align: 'center' })
 
     // Score ESG Global
     doc.setTextColor(0, 0, 0)
     doc.setFontSize(18)
     doc.setFont(undefined, 'bold')
-    doc.text('Score ESG Global', 20, 55)
+    doc.text('Score ESG Global', 20, 65)
     doc.setFontSize(48)
     doc.setTextColor(16, 185, 129)
-    doc.text(`${esgScore}`, 105, 75, { align: 'center' })
+    doc.text(`${esgScore}`, 105, 85, { align: 'center' })
     doc.setFontSize(12)
     doc.setTextColor(100, 100, 100)
-    doc.text('de 100 pontos', 105, 85, { align: 'center' })
+    doc.text('de 100 pontos', 105, 95, { align: 'center' })
 
     // Scores dos Pilares
     doc.setFontSize(14)
     doc.setTextColor(0, 0, 0)
     doc.setFont(undefined, 'bold')
-    doc.text('Breakdown por Pilar', 20, 100)
+    doc.text('Breakdown por Pilar', 20, 110)
 
     const pillarData = [
       ['Pilar', 'Score', 'Peso', 'Contribuição'],
@@ -416,7 +425,7 @@ function App() {
     ]
 
     autoTable(doc, {
-      startY: 105,
+      startY: 115,
       head: [pillarData[0]],
       body: pillarData.slice(1),
       theme: 'grid',
@@ -426,14 +435,23 @@ function App() {
 
     // Métricas Detalhadas - Ambiental
     doc.addPage()
+
+    // Header nas páginas de pilares
+    doc.setFillColor(16, 185, 129)
+    doc.rect(0, 0, 210, 30, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(20)
+    doc.setFont(undefined, 'bold')
+    doc.text(`${companyInfo.name || 'Empresa'} - Pilar Ambiental`, 105, 18, { align: 'center' })
+
     doc.setFontSize(18)
     doc.setFont(undefined, 'bold')
     doc.setTextColor(16, 185, 129)
-    doc.text('🌱 Pilar Ambiental', 20, 20)
+    doc.text('🌱 Métricas Ambientais', 20, 45)
     doc.setFontSize(12)
     doc.setTextColor(0, 0, 0)
     doc.setFont(undefined, 'normal')
-    doc.text(`Score: ${esgData.environmental.score}/100`, 20, 30)
+    doc.text(`Score: ${esgData.environmental.score}/100`, 20, 55)
 
     const envMetrics = Object.entries(esgData.environmental.metrics).map(([key, metric]) => [
       metric.name,
@@ -443,7 +461,7 @@ function App() {
     ])
 
     autoTable(doc, {
-      startY: 35,
+      startY: 60,
       head: [['Métrica', 'Valor', 'Peso', 'Status']],
       body: envMetrics,
       theme: 'striped',
@@ -460,14 +478,23 @@ function App() {
 
     // Métricas Detalhadas - Social
     doc.addPage()
+
+    // Header Social
+    doc.setFillColor(59, 130, 246)
+    doc.rect(0, 0, 210, 30, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(20)
+    doc.setFont(undefined, 'bold')
+    doc.text(`${companyInfo.name || 'Empresa'} - Pilar Social`, 105, 18, { align: 'center' })
+
     doc.setFontSize(18)
     doc.setFont(undefined, 'bold')
     doc.setTextColor(59, 130, 246)
-    doc.text('👥 Pilar Social', 20, 20)
+    doc.text('👥 Métricas Sociais', 20, 45)
     doc.setFontSize(12)
     doc.setTextColor(0, 0, 0)
     doc.setFont(undefined, 'normal')
-    doc.text(`Score: ${esgData.social.score}/100`, 20, 30)
+    doc.text(`Score: ${esgData.social.score}/100`, 20, 55)
 
     const socialMetrics = Object.entries(esgData.social.metrics).map(([key, metric]) => [
       metric.name,
@@ -477,7 +504,7 @@ function App() {
     ])
 
     autoTable(doc, {
-      startY: 35,
+      startY: 60,
       head: [['Métrica', 'Valor', 'Peso', 'Status']],
       body: socialMetrics,
       theme: 'striped',
@@ -494,14 +521,23 @@ function App() {
 
     // Métricas Detalhadas - Governança
     doc.addPage()
+
+    // Header Governança
+    doc.setFillColor(168, 85, 247)
+    doc.rect(0, 0, 210, 30, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(20)
+    doc.setFont(undefined, 'bold')
+    doc.text(`${companyInfo.name || 'Empresa'} - Pilar Governança`, 105, 18, { align: 'center' })
+
     doc.setFontSize(18)
     doc.setFont(undefined, 'bold')
     doc.setTextColor(168, 85, 247)
-    doc.text('⚖️ Pilar Governança', 20, 20)
+    doc.text('⚖️ Métricas de Governança', 20, 45)
     doc.setFontSize(12)
     doc.setTextColor(0, 0, 0)
     doc.setFont(undefined, 'normal')
-    doc.text(`Score: ${esgData.governance.score}/100`, 20, 30)
+    doc.text(`Score: ${esgData.governance.score}/100`, 20, 55)
 
     const govMetrics = Object.entries(esgData.governance.metrics).map(([key, metric]) => [
       metric.name,
@@ -511,7 +547,7 @@ function App() {
     ])
 
     autoTable(doc, {
-      startY: 35,
+      startY: 60,
       head: [['Métrica', 'Valor', 'Peso', 'Status']],
       body: govMetrics,
       theme: 'striped',
@@ -648,12 +684,13 @@ function App() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-2xl">E</span>
-              </div>
               <div>
-                <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>ESG Nexus Pro</h1>
-                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Plataforma Profissional de Gestão ESG</p>
+                <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {companyInfo.name || 'ESG Nexus Pro'}
+                </h1>
+                <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {companyInfo.sector ? `${companyInfo.sector} • Plataforma ESG` : 'Plataforma Profissional de Gestão ESG'}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -1524,6 +1561,97 @@ function App() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Informações da Empresa */}
+      {showCompanyModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-2xl max-w-lg w-full p-8`}>
+            <div className="mb-6 text-center">
+              <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+                🏢 Informações da Empresa
+              </h2>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Preencha as informações antes de iniciar a avaliação ESG
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2`}>
+                  Nome da Empresa *
+                </label>
+                <input
+                  type="text"
+                  value={companyInfo.name}
+                  onChange={(e) => setCompanyInfo({...companyInfo, name: e.target.value})}
+                  placeholder="Ex: Empresa Sustentável LTDA"
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-400'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-emerald-500'
+                  } focus:ring-2 focus:ring-emerald-500/50`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2`}>
+                  Setor de Atuação *
+                </label>
+                <input
+                  type="text"
+                  value={companyInfo.sector}
+                  onChange={(e) => setCompanyInfo({...companyInfo, sector: e.target.value})}
+                  placeholder="Ex: Energia Renovável, Tecnologia, Construção Civil"
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-400'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-emerald-500'
+                  } focus:ring-2 focus:ring-emerald-500/50`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2`}>
+                  Responsável Técnico *
+                </label>
+                <input
+                  type="text"
+                  value={companyInfo.technicalResponsible}
+                  onChange={(e) => setCompanyInfo({...companyInfo, technicalResponsible: e.target.value})}
+                  placeholder="Ex: João Silva - Gerente de Sustentabilidade"
+                  className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-emerald-400'
+                      : 'bg-white border-gray-300 text-gray-900 focus:border-emerald-500'
+                  } focus:ring-2 focus:ring-emerald-500/50`}
+                />
+              </div>
+
+              <div className={`p-4 rounded-lg ${darkMode ? 'bg-emerald-900/30 border border-emerald-700' : 'bg-emerald-50 border border-emerald-200'}`}>
+                <p className={`text-sm ${darkMode ? 'text-emerald-200' : 'text-emerald-900'}`}>
+                  ℹ️ Estas informações aparecerão no cabeçalho do relatório PDF e na plataforma.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (companyInfo.name && companyInfo.sector && companyInfo.technicalResponsible) {
+                    setShowCompanyModal(false)
+                  } else {
+                    alert('Por favor, preencha todos os campos obrigatórios.')
+                  }
+                }}
+                className="w-full px-4 py-4 bg-gradient-to-r from-emerald-600 to-blue-600 text-white rounded-lg hover:from-emerald-700 hover:to-blue-700 transition-all font-bold shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Continuar para a Plataforma</span>
+              </button>
             </div>
           </div>
         </div>
