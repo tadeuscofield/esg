@@ -324,25 +324,47 @@ function App() {
     setFormData({})
   }
 
+  // Função para calcular score de um pilar baseado nas métricas
+  const calculatePillarScore = (metrics) => {
+    let totalScore = 0
+    let totalWeight = 0
+
+    Object.values(metrics).forEach(metric => {
+      if (metric.value !== undefined && metric.weight !== undefined) {
+        totalScore += metric.value * metric.weight
+        totalWeight += metric.weight
+      }
+    })
+
+    return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
+  }
+
   // Função para salvar dados do formulário
   const handleFormSubmit = (e, category) => {
     e.preventDefault()
 
-    // Atualizar dados no estado
+    // Mesclar formData com métricas existentes
+    const updatedMetrics = {
+      ...esgData[category].metrics,
+      ...formData
+    }
+
+    // Calcular novo score do pilar
+    const newScore = calculatePillarScore(updatedMetrics)
+
+    // Atualizar dados no estado com score recalculado
     setEsgData(prev => ({
       ...prev,
       [category]: {
         ...prev[category],
-        metrics: {
-          ...prev[category].metrics,
-          ...formData
-        }
+        score: newScore,
+        metrics: updatedMetrics
       }
     }))
 
     setShowModal(null)
     setFormData({})
-    alert('Dados salvos com sucesso!')
+    alert(`✅ Dados salvos! Score ${category === 'environmental' ? 'Ambiental' : category === 'social' ? 'Social' : 'Governança'}: ${newScore}/100`)
   }
 
   // Função de exportação
