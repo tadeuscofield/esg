@@ -191,7 +191,7 @@
     "percy-cypress": "^3.1.2",
     "lighthouse-ci": "^1.1.2",
     "@axe-core/react": "^4.8.2",
-    "pa11y": "^7.0.1",
+    "pa11y": "^6.2.3",
     "jest-axe": "^8.0.0",
     "msw": "^2.0.8",
     "@faker-js/faker": "^8.3.1",
