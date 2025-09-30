@@ -10,6 +10,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [showModal, setShowModal] = useState(null)
+  const [showDetailedModal, setShowDetailedModal] = useState(null) // {category, metricKey}
   const [showExportModal, setShowExportModal] = useState(false)
   const [showMethodologyModal, setShowMethodologyModal] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
@@ -354,6 +355,306 @@ function App() {
     setFormData({})
   }
 
+  // Funções de cálculo automático de scores baseado nos dados inseridos
+
+  // Calcula score de Riscos Climáticos baseado nos dados
+  const calculateClimateRiskScore = (details) => {
+    let score = 100
+
+    // Penalizar por riscos físicos altos (0-100, quanto menor melhor)
+    score -= (details.physicalRisk || 0) * 0.3
+
+    // Penalizar por riscos de transição altos (0-100, quanto menor melhor)
+    score -= (details.transitionRisk || 0) * 0.3
+
+    // Bonificar por meta Net Zero (quanto mais próximo de 2030, melhor)
+    const targetYear = parseInt(details.netZeroTarget) || 2100
+    if (targetYear <= 2030) score += 20
+    else if (targetYear <= 2040) score += 15
+    else if (targetYear <= 2050) score += 10
+
+    // Bonificar por SBT e TCFD
+    if (details.scienceBasedTarget) score += 10
+    if (details.tcfdAligned) score += 10
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Emissões GEE
+  const calculateEmissionsScore = (details) => {
+    let score = 50 // Base
+
+    // Bonificar por redução YoY
+    const reduction = details.reductionYoY || 0
+    if (reduction >= 15) score += 30
+    else if (reduction >= 10) score += 20
+    else if (reduction >= 5) score += 10
+
+    // Bonificar por offset
+    const offset = details.offsetPercentage || 0
+    score += Math.min(20, offset)
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Economia Circular
+  const calculateCircularityScore = (details) => {
+    let score = 0
+
+    // Recycling rate contribui 40%
+    score += (details.recyclingRate || 0) * 0.4
+
+    // Recyclable content contribui 30%
+    score += (details.recyclableContent || 0) * 0.3
+
+    // Penalizar por resíduos perigosos (normalizar)
+    const hazardous = Math.min(100, (details.hazardousWaste || 0) / 5)
+    score -= hazardous * 0.15
+
+    // Penalizar por aterro (normalizar)
+    const landfill = Math.min(100, (details.wasteToLandfill || 0) / 10)
+    score -= landfill * 0.15
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Gestão Hídrica
+  const calculateWaterScore = (details) => {
+    let score = 0
+
+    // Reuse rate contribui 35%
+    score += (details.reuseRate || 0) * 0.35
+
+    // Recycle rate contribui 35%
+    score += (details.recycleRate || 0) * 0.35
+
+    // Wastewater treated contribui 30%
+    score += (details.wastewaterTreated || 0) * 0.3
+
+    // Penalizar por áreas de stress hídrico
+    score -= (details.waterStressPercentage || 0) * 0.2
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Biodiversidade
+  const calculateBiodiversityScore = (details) => {
+    let score = 50 // Base
+
+    // Penalizar por áreas protegidas impactadas
+    score -= (details.protectedAreasImpacted || 0) * 5
+
+    // Bonificar por projetos de restauração
+    score += Math.min(20, (details.restorationProjects || 0) * 4)
+
+    // Bonificar por hectares restaurados (normalizar)
+    score += Math.min(15, (details.restorationHectares || 0) / 10)
+
+    // Bonificar por alinhamentos
+    if (details.tnfdAligned) score += 10
+    if (details.sbtForNature) score += 10
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Direitos Humanos
+  const calculateHumanRightsScore = (details) => {
+    let score = 0
+
+    // Tier1 auditados contribui 40%
+    score += (details.tier1Audited || 0) * 0.4
+
+    // Penalizar por violações
+    score -= (details.violations || 0) * 10
+
+    // Bonificar por certificações e políticas
+    if (details.sa8000Certified) score += 20
+    if (details.humanRightsPolicy) score += 20
+    if (details.grievanceMechanism) score += 20
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Diversidade
+  const calculateDiversityScore = (details) => {
+    let score = 0
+
+    // Women total contribui 25%
+    score += (details.womenTotal || 0) * 0.25
+
+    // Women leadership contribui 25%
+    score += (details.womenLeadership || 0) * 0.25
+
+    // Women board contribui 20%
+    score += (details.womenBoard || 0) * 0.2
+
+    // Penalizar por gender pay gap (inverter - quanto menor melhor)
+    const gapPenalty = Math.min(20, (details.genderPayGap || 0) * 2)
+    score -= gapPenalty
+
+    // Inclusion score contribui 15% (normalizado de 0-10 para 0-100)
+    score += (details.inclusionScore || 0) * 1.5
+
+    // Bonificar por políticas
+    if (details.lgbtqPolicies) score += 10
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Impacto Comunitário
+  const calculateCommunityScore = (details) => {
+    let score = 0
+
+    // Local employment contribui 30%
+    score += (details.localEmployment || 0) * 0.3
+
+    // Local suppliers contribui 30%
+    score += (details.localSuppliers || 0) * 0.3
+
+    // SROI contribui 20% (normalizado)
+    score += Math.min(20, (details.sroi || 0) * 5)
+
+    // Satisfaction contribui 20% (normalizado de 0-10)
+    score += (details.satisfactionScore || 0) * 2
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Bem-estar
+  const calculateWellbeingScore = (details) => {
+    let score = 100
+
+    // Penalizar por burnout
+    score -= (details.burnoutRate || 0) * 0.5
+
+    // Bonificar por satisfaction (normalizado de 0-10)
+    score += (details.satisfactionScore || 0) * 0.5
+
+    // Bonificar por eNPS (normalizado de -100 a 100)
+    score += (details.eNPS || 0) * 0.1
+
+    // Penalizar por turnover alto
+    score -= (details.turnover || 0) * 0.3
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Segurança
+  const calculateSafetyScore = (details) => {
+    let score = 100
+
+    // Penalizar por LTIFR (Lost Time Injury Frequency Rate)
+    score -= (details.ltifr || 0) * 10
+
+    // Penalizar por TRIFR
+    score -= (details.trifr || 0) * 5
+
+    // Penalizar PESADO por fatalidades
+    score -= (details.fatalities || 0) * 50
+
+    // Bonificar por certificações
+    if (details.iso45001) score += 15
+    if (details.behaviorBasedSafety) score += 10
+
+    // Bonificar por cobertura de treinamento
+    score += (details.safetyTrainingCoverage || 0) * 0.05
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Integração ESG
+  const calculateESGIntegrationScore = (details) => {
+    let score = 0
+
+    // Compensation linked contribui 40%
+    score += (details.compensationLinked || 0) * 0.4
+
+    // CEO compensation ESG contribui 30%
+    score += (details.ceoCompensationESG || 0) * 0.3
+
+    // Bonificar por políticas e estratégias
+    if (details.ltipESGMetrics) score += 10
+    if (details.esgCommittee) score += 10
+    if (details.strategyIntegrated) score += 5
+    if (details.materialityAssessment) score += 5
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Estrutura do Conselho
+  const calculateBoardScore = (details) => {
+    let score = 0
+
+    // Independent directors contribui 40%
+    score += (details.independentDirectors || 0) * 0.4
+
+    // Non-executive contribui 30%
+    score += (details.nonExecutive || 0) * 0.3
+
+    // Women board contribui 30%
+    score += (details.womenBoard || 0) * 0.3
+
+    // Bonificar por boas práticas
+    if (details.boardEvaluations) score += 5
+    if (details.successionPlanning) score += 5
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Transparência
+  const calculateTransparencyScore = (details) => {
+    let score = 0
+
+    // Disclosure score contribui 60%
+    score += (details.disclosureScore || 0) * 0.6
+
+    // Bonificar por reports e alinhamentos
+    if (details.integratedReporting) score += 10
+    if (details.tcfdReport) score += 10
+    if (details.sasbStandards) score += 10
+    if (details.externalAssurance) score += 10
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Cyber & Ética
+  const calculateCyberEthicsScore = (details) => {
+    let score = 100
+
+    // Penalizar por data breaches
+    score -= (details.dataBreaches || 0) * 20
+
+    // Bonificar por certificações
+    if (details.cyberInsurance) score += 5
+    if (details.iso27001) score += 10
+    if (details.gdprCompliant) score += 5
+    if (details.lgpdCompliant) score += 5
+    if (details.aiEthicsPolicy) score += 5
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
+  // Calcula score de Compliance
+  const calculateComplianceScore = (details) => {
+    let score = 100
+
+    // Penalizar por multas
+    score -= (details.fines || 0) * 10
+
+    // Penalizar por investigações
+    score -= (details.investigations || 0) * 5
+
+    // Penalizar por litigações
+    score -= (details.litigations || 0) * 3
+
+    // Bonificar por políticas e treinamentos
+    if (details.codeOfConduct) score += 5
+    if (details.anticorruptionPolicy) score += 5
+    if (details.whistleblowerChannel) score += 5
+
+    return Math.max(0, Math.min(100, Math.round(score)))
+  }
+
   // Função para calcular score de um pilar baseado nas métricas
   const calculatePillarScore = (metrics) => {
     let totalScore = 0
@@ -369,7 +670,93 @@ function App() {
     return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0
   }
 
-  // Função para salvar dados do formulário
+  // Recalcula todas as notas baseado nos dados inseridos
+  const recalculateAllScores = (category, metricKey, newDetails) => {
+    let newValue = 0
+
+    // Mapear qual função de cálculo usar
+    const calculators = {
+      environmental: {
+        climateRisk: calculateClimateRiskScore,
+        emissions: calculateEmissionsScore,
+        resourceEfficiency: calculateCircularityScore,
+        waterManagement: calculateWaterScore,
+        biodiversity: calculateBiodiversityScore
+      },
+      social: {
+        humanRights: calculateHumanRightsScore,
+        diversity: calculateDiversityScore,
+        communityImpact: calculateCommunityScore,
+        employeeWellbeing: calculateWellbeingScore,
+        safety: calculateSafetyScore
+      },
+      governance: {
+        esgIntegration: calculateESGIntegrationScore,
+        boardStructure: calculateBoardScore,
+        transparency: calculateTransparencyScore,
+        cyberEthics: calculateCyberEthicsScore,
+        compliance: calculateComplianceScore
+      }
+    }
+
+    // Calcular nova nota baseada nos detalhes
+    if (calculators[category] && calculators[category][metricKey]) {
+      newValue = calculators[category][metricKey](newDetails)
+    }
+
+    return newValue
+  }
+
+  // Função para salvar dados detalhados de uma métrica específica
+  const handleDetailedFormSubmit = (e, category, metricKey) => {
+    e.preventDefault()
+
+    // Obter dados atuais da métrica
+    const currentMetric = esgData[category].metrics[metricKey]
+
+    // Mesclar detalhes atualizados
+    const updatedDetails = {
+      ...currentMetric.details,
+      ...formData
+    }
+
+    // Recalcular score da métrica baseado nos novos detalhes
+    const newMetricValue = recalculateAllScores(category, metricKey, updatedDetails)
+
+    // Atualizar métrica com novos detalhes e valor recalculado
+    const updatedMetric = {
+      ...currentMetric,
+      details: updatedDetails,
+      value: newMetricValue
+    }
+
+    // Atualizar todas as métricas
+    const updatedMetrics = {
+      ...esgData[category].metrics,
+      [metricKey]: updatedMetric
+    }
+
+    // Calcular novo score do pilar
+    const newPillarScore = calculatePillarScore(updatedMetrics)
+
+    // Atualizar estado completo
+    setEsgData(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        score: newPillarScore,
+        metrics: updatedMetrics
+      }
+    }))
+
+    setShowModal(null)
+    setFormData({})
+
+    const categoryName = category === 'environmental' ? 'Ambiental' : category === 'social' ? 'Social' : 'Governança'
+    alert(`✅ Dados salvos!\n${currentMetric.name}: ${newMetricValue}/100\nScore ${categoryName}: ${newPillarScore}/100`)
+  }
+
+  // Função para salvar dados do formulário (mantida para compatibilidade)
   const handleFormSubmit = (e, category) => {
     e.preventDefault()
 
@@ -608,13 +995,22 @@ function App() {
       headStyles: { fillColor: [34, 197, 94] }
     })
 
+    // Gráfico de barras das métricas ambientais
+    const envMetricsBars = Object.entries(esgData.environmental.metrics).map(([key, metric]) => ({
+      label: metric.name.substring(0, 12), // Truncar nomes longos
+      value: metric.value,
+      color: metric.value >= 80 ? [34, 197, 94] : metric.value >= 60 ? [59, 130, 246] : [234, 179, 8]
+    }))
+
+    drawBarChart(doc, 20, doc.lastAutoTable.finalY + 10, 170, 50, envMetricsBars, 'Breakdown Métricas Ambientais')
+
     const envSuggestion = generateSuggestions('environmental', esgData.environmental.score)
     doc.setFontSize(11)
     doc.setFont(undefined, 'bold')
-    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 75)
     doc.setFont(undefined, 'normal')
     const splitSuggestion = doc.splitTextToSize(envSuggestion, 170)
-    doc.text(splitSuggestion, 20, doc.lastAutoTable.finalY + 18)
+    doc.text(splitSuggestion, 20, doc.lastAutoTable.finalY + 83)
 
     // Métricas Detalhadas - Social
     doc.addPage()
@@ -651,13 +1047,22 @@ function App() {
       headStyles: { fillColor: [59, 130, 246] }
     })
 
+    // Gráfico de barras das métricas sociais
+    const socialMetricsBars = Object.entries(esgData.social.metrics).map(([key, metric]) => ({
+      label: metric.name.substring(0, 12),
+      value: metric.value,
+      color: metric.value >= 80 ? [34, 197, 94] : metric.value >= 60 ? [59, 130, 246] : [234, 179, 8]
+    }))
+
+    drawBarChart(doc, 20, doc.lastAutoTable.finalY + 10, 170, 50, socialMetricsBars, 'Breakdown Métricas Sociais')
+
     const socialSuggestion = generateSuggestions('social', esgData.social.score)
     doc.setFontSize(11)
     doc.setFont(undefined, 'bold')
-    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 75)
     doc.setFont(undefined, 'normal')
     const splitSocialSuggestion = doc.splitTextToSize(socialSuggestion, 170)
-    doc.text(splitSocialSuggestion, 20, doc.lastAutoTable.finalY + 18)
+    doc.text(splitSocialSuggestion, 20, doc.lastAutoTable.finalY + 83)
 
     // Métricas Detalhadas - Governança
     doc.addPage()
@@ -694,13 +1099,22 @@ function App() {
       headStyles: { fillColor: [168, 85, 247] }
     })
 
+    // Gráfico de barras das métricas de governança
+    const govMetricsBars = Object.entries(esgData.governance.metrics).map(([key, metric]) => ({
+      label: metric.name.substring(0, 12),
+      value: metric.value,
+      color: metric.value >= 80 ? [34, 197, 94] : metric.value >= 60 ? [168, 85, 247] : [234, 179, 8]
+    }))
+
+    drawBarChart(doc, 20, doc.lastAutoTable.finalY + 10, 170, 50, govMetricsBars, 'Breakdown Métricas de Governança')
+
     const govSuggestion = generateSuggestions('governance', esgData.governance.score)
     doc.setFontSize(11)
     doc.setFont(undefined, 'bold')
-    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 10)
+    doc.text('Sugestões de Melhoria:', 20, doc.lastAutoTable.finalY + 75)
     doc.setFont(undefined, 'normal')
     const splitGovSuggestion = doc.splitTextToSize(govSuggestion, 170)
-    doc.text(splitGovSuggestion, 20, doc.lastAutoTable.finalY + 18)
+    doc.text(splitGovSuggestion, 20, doc.lastAutoTable.finalY + 83)
 
     // Rodapé em todas as páginas com disclaimer
     const pageCount = doc.internal.getNumberOfPages()
@@ -1184,6 +1598,17 @@ function App() {
                       style={{ width: `${metric.value}%` }}
                     ></div>
                   </div>
+
+                  <button
+                    onClick={() => setShowDetailedModal({ category: 'environmental', metricKey: key })}
+                    className={`mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all ${
+                      darkMode
+                        ? 'bg-green-700 hover:bg-green-600 text-white'
+                        : 'bg-green-100 hover:bg-green-200 text-green-800'
+                    }`}
+                  >
+                    ✏️ Editar Dados
+                  </button>
                 </div>
               ))}
             </div>
@@ -1239,6 +1664,17 @@ function App() {
                       style={{ width: `${metric.value}%` }}
                     ></div>
                   </div>
+
+                  <button
+                    onClick={() => setShowDetailedModal({ category: 'social', metricKey: key })}
+                    className={`mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all ${
+                      darkMode
+                        ? 'bg-blue-700 hover:bg-blue-600 text-white'
+                        : 'bg-blue-100 hover:bg-blue-200 text-blue-800'
+                    }`}
+                  >
+                    ✏️ Editar Dados
+                  </button>
                 </div>
               ))}
             </div>
@@ -1294,6 +1730,17 @@ function App() {
                       style={{ width: `${metric.value}%` }}
                     ></div>
                   </div>
+
+                  <button
+                    onClick={() => setShowDetailedModal({ category: 'governance', metricKey: key })}
+                    className={`mt-4 w-full py-2 px-4 rounded-lg font-semibold transition-all ${
+                      darkMode
+                        ? 'bg-purple-700 hover:bg-purple-600 text-white'
+                        : 'bg-purple-100 hover:bg-purple-200 text-purple-800'
+                    }`}
+                  >
+                    ✏️ Editar Dados
+                  </button>
                 </div>
               ))}
             </div>
@@ -1419,6 +1866,133 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Modal de Edição Detalhada */}
+      {showDetailedModal && (() => {
+        const { category, metricKey } = showDetailedModal
+        const metric = esgData[category].metrics[metricKey]
+
+        return (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto p-8`}>
+              <div className="flex justify-between items-center mb-6 sticky top-0 bg-inherit pb-4 border-b dark:border-gray-700">
+                <div>
+                  <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    ✏️ Editar: {metric.name}
+                  </h2>
+                  <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Preencha os dados após auditoria interna. A nota será calculada automaticamente.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowDetailedModal(null)
+                    setFormData({})
+                  }}
+                  className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={(e) => handleDetailedFormSubmit(e, category, metricKey)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Object.entries(metric.details).map(([detailKey, detailValue]) => (
+                    <div key={detailKey} className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                      <label className={`block text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-700'} mb-2 capitalize`}>
+                        {detailKey.replace(/([A-Z])/g, ' $1').trim()}
+                      </label>
+
+                      {typeof detailValue === 'boolean' ? (
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            defaultChecked={detailValue}
+                            className="w-5 h-5 rounded"
+                            onChange={(e) => setFormData({...formData, [detailKey]: e.target.checked})}
+                          />
+                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                            {formData[detailKey] !== undefined ? (formData[detailKey] ? 'Sim' : 'Não') : (detailValue ? 'Sim' : 'Não')}
+                          </span>
+                        </div>
+                      ) : typeof detailValue === 'number' ? (
+                        <input
+                          type="number"
+                          step="0.01"
+                          defaultValue={detailValue}
+                          placeholder={`Valor atual: ${detailValue}`}
+                          className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                            darkMode
+                              ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400'
+                              : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                          } focus:ring-2 focus:ring-blue-500/50`}
+                          onChange={(e) => setFormData({...formData, [detailKey]: Number(e.target.value)})}
+                        />
+                      ) : typeof detailValue === 'string' ? (
+                        <input
+                          type="text"
+                          defaultValue={detailValue}
+                          placeholder={`Valor atual: ${detailValue}`}
+                          className={`w-full px-4 py-3 border-2 rounded-lg font-medium transition-all ${
+                            darkMode
+                              ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400 focus:border-blue-400'
+                              : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                          } focus:ring-2 focus:ring-blue-500/50`}
+                          onChange={(e) => setFormData({...formData, [detailKey]: e.target.value})}
+                        />
+                      ) : (
+                        <div className={`px-4 py-3 rounded-lg ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
+                          <span className="text-sm">Tipo complexo - edição não suportada nesta versão</span>
+                        </div>
+                      )}
+
+                      <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Valor atual: {typeof detailValue === 'boolean' ? (detailValue ? '✓ Sim' : '✗ Não') : detailValue}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
+                  <h3 className={`font-bold mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>
+                    🤖 Cálculo Automático
+                  </h3>
+                  <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-900'}`}>
+                    Ao salvar, a nota desta métrica será calculada automaticamente baseada nos dados inseridos.
+                    O score do pilar ({category === 'environmental' ? 'Ambiental' : category === 'social' ? 'Social' : 'Governança'})
+                    também será atualizado com base na média ponderada de todas as métricas.
+                  </p>
+                </div>
+
+                <div className="flex space-x-3 pt-4 border-t dark:border-gray-700">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDetailedModal(null)
+                      setFormData({})
+                    }}
+                    className={`flex-1 px-4 py-3 border-2 rounded-lg transition-all font-bold ${
+                      darkMode
+                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all font-bold shadow-lg hover:shadow-xl"
+                  >
+                    💾 Salvar e Calcular
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Modal de Metodologia */}
       {showMethodologyModal && (
