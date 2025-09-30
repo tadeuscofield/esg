@@ -5,6 +5,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [showModal, setShowModal] = useState(null)
   const [showExportModal, setShowExportModal] = useState(false)
+  const [showMethodologyModal, setShowMethodologyModal] = useState(false)
 
   // Estado de dados completo baseado no data-structure.md
   const [esgData, setEsgData] = useState({
@@ -418,6 +419,17 @@ function App() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Methodology Button */}
+              <button
+                onClick={() => setShowMethodologyModal(true)}
+                className={`p-2.5 rounded-lg transition-all ${darkMode ? 'bg-gray-700 text-blue-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                title="Metodologia de Avaliação"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+
               {/* Dark Mode Toggle */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
@@ -922,6 +934,210 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Metodologia */}
+      {showMethodologyModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-8`}>
+            <div className="flex justify-between items-center mb-6 sticky top-0 bg-inherit pb-4 border-b dark:border-gray-700">
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                📊 Metodologia de Avaliação ESG
+              </h2>
+              <button
+                onClick={() => setShowMethodologyModal(false)}
+                className={`${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Disclaimer */}
+              <div className={`p-6 rounded-xl ${darkMode ? 'bg-yellow-900/30 border border-yellow-700' : 'bg-yellow-50 border-2 border-yellow-200'}`}>
+                <div className="flex items-start space-x-3">
+                  <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 className={`font-bold text-lg mb-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-800'}`}>⚠️ Disclaimer Importante</h3>
+                    <p className={`${darkMode ? 'text-yellow-200' : 'text-yellow-900'} leading-relaxed`}>
+                      Esta plataforma é uma ferramenta de <strong>gestão e acompanhamento interno</strong> de métricas ESG.
+                      As notas inseridas devem ser baseadas em <strong>auditorias profissionais, certificações externas e dados verificáveis</strong>.
+                      Os scores não substituem avaliações oficiais de agências de rating (MSCI, Sustainalytics, CDP, etc.) e devem ser
+                      validados por consultores especializados antes de divulgação pública.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sistema de Pontuação */}
+              <div>
+                <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  🎯 Sistema de Pontuação (0-100)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-green-900/30 border border-green-700' : 'bg-green-50 border border-green-200'}`}>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-2xl">🟢</span>
+                      <h4 className={`font-bold ${darkMode ? 'text-green-400' : 'text-green-800'}`}>90-100 | Excelente</h4>
+                    </div>
+                    <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-green-700'}`}>
+                      Práticas líderes de mercado, certificações internacionais, transparência total e metas ambiciosas cumpridas.
+                    </p>
+                  </div>
+
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-blue-900/30 border border-blue-700' : 'bg-blue-50 border border-blue-200'}`}>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-2xl">🔵</span>
+                      <h4 className={`font-bold ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>70-89 | Bom</h4>
+                    </div>
+                    <p className={`text-sm ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
+                      Conformidade com principais frameworks, programas estruturados e melhorias contínuas demonstradas.
+                    </p>
+                  </div>
+
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-yellow-900/30 border border-yellow-700' : 'bg-yellow-50 border border-yellow-200'}`}>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-2xl">🟡</span>
+                      <h4 className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-800'}`}>50-69 | Moderado</h4>
+                    </div>
+                    <p className={`text-sm ${darkMode ? 'text-yellow-200' : 'text-yellow-700'}`}>
+                      Práticas básicas implementadas, mas com lacunas significativas e necessidade de melhorias estruturais.
+                    </p>
+                  </div>
+
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-red-900/30 border border-red-700' : 'bg-red-50 border border-red-200'}`}>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-2xl">🔴</span>
+                      <h4 className={`font-bold ${darkMode ? 'text-red-400' : 'text-red-800'}`}>0-49 | Crítico</h4>
+                    </div>
+                    <p className={`text-sm ${darkMode ? 'text-red-200' : 'text-red-700'}`}>
+                      Ausência de práticas essenciais, não-conformidade regulatória ou riscos materiais não gerenciados.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cálculo do Score ESG */}
+              <div>
+                <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  📐 Cálculo do Score ESG Global
+                </h3>
+                <div className={`p-6 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        🌱 Pilar Ambiental
+                      </span>
+                      <span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>35%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        👥 Pilar Social
+                      </span>
+                      <span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>30%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        ⚖️ Pilar Governança
+                      </span>
+                      <span className={`font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>35%</span>
+                    </div>
+                    <div className={`pt-4 mt-4 border-t ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <strong>Fórmula:</strong> Score ESG = (Ambiental × 0.35) + (Social × 0.30) + (Governança × 0.35)
+                      </p>
+                      <p className={`text-xs mt-2 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                        Cada pilar é calculado pela média ponderada de suas métricas específicas.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Como Aplicar Notas */}
+              <div>
+                <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  ✍️ Como Aplicar as Notas
+                </h3>
+                <ol className={`space-y-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <li className="flex items-start space-x-3">
+                    <span className="font-bold text-blue-500 flex-shrink-0">1.</span>
+                    <span>
+                      <strong>Coleta de Dados:</strong> Reúna documentação oficial (certificados ISO, relatórios de auditoria,
+                      medições de emissões verificadas, registros de treinamento, etc.)
+                    </span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="font-bold text-blue-500 flex-shrink-0">2.</span>
+                    <span>
+                      <strong>Benchmarking:</strong> Compare seus dados com padrões do setor e best practices
+                      (ex: MSCI ESG Ratings Methodology, GRI Standards, SASB)
+                    </span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="font-bold text-blue-500 flex-shrink-0">3.</span>
+                    <span>
+                      <strong>Avaliação:</strong> Para cada métrica, atribua uma nota (0-100) baseada no gap entre
+                      sua performance atual e as melhores práticas do mercado
+                    </span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="font-bold text-blue-500 flex-shrink-0">4.</span>
+                    <span>
+                      <strong>Inserção:</strong> Acesse a aba específica (Ambiental/Social/Governança),
+                      clique em "Adicionar Dados" e insira os valores avaliados
+                    </span>
+                  </li>
+                  <li className="flex items-start space-x-3">
+                    <span className="font-bold text-blue-500 flex-shrink-0">5.</span>
+                    <span>
+                      <strong>Revisão Periódica:</strong> Atualize as métricas trimestralmente ou conforme novas
+                      auditorias/certificações sejam obtidas
+                    </span>
+                  </li>
+                </ol>
+              </div>
+
+              {/* Frameworks de Referência */}
+              <div>
+                <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  📚 Frameworks de Referência
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { name: 'GRI', desc: 'Global Reporting Initiative' },
+                    { name: 'SASB', desc: 'Sustainability Standards' },
+                    { name: 'TCFD', desc: 'Climate Disclosures' },
+                    { name: 'CDP', desc: 'Carbon Disclosure' },
+                    { name: 'MSCI', desc: 'ESG Ratings' },
+                    { name: 'ISO 14001', desc: 'Environmental Mgmt' },
+                    { name: 'ISO 45001', desc: 'Occupational Safety' },
+                    { name: 'B Corp', desc: 'Certified B Corp' }
+                  ].map((framework, idx) => (
+                    <div key={idx} className={`p-3 rounded-lg text-center ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                      <p className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>{framework.name}</p>
+                      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{framework.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Botão Fechar */}
+              <div className="pt-4">
+                <button
+                  onClick={() => setShowMethodologyModal(false)}
+                  className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-all shadow-lg"
+                >
+                  Entendi
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
