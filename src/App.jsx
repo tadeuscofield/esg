@@ -3,6 +3,9 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import emailjs from '@emailjs/browser'
 
+// Inicializar EmailJS com a Public Key
+emailjs.init('FI4D7nkFYtcKDD89Y')
+
 function App() {
   const [darkMode, setDarkMode] = useState(false)
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -642,14 +645,10 @@ function App() {
           pdf_attachment: base64data
         }
 
-        // Substitua com suas credenciais do EmailJS
-        // emailjs.init('YOUR_PUBLIC_KEY')
-        // await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+        // Enviar email via EmailJS
+        await emailjs.send('service_dggqn0s', 'template_gl7qjvp', templateParams)
 
-        // Por enquanto, simular envio
-        await new Promise(resolve => setTimeout(resolve, 1500))
-
-        alert(`✅ Relatório PDF enviado automaticamente para ${companyInfo.email}!\n\nNota: Configure o EmailJS com suas credenciais para envio real.`)
+        alert(`✅ Relatório PDF enviado com sucesso para ${companyInfo.email}!`)
       }
     } catch (error) {
       console.error('Erro ao enviar email:', error)
@@ -685,14 +684,10 @@ function App() {
           pdf_attachment: base64data
         }
 
-        // Substitua com suas credenciais do EmailJS
-        // emailjs.init('YOUR_PUBLIC_KEY')
-        // await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+        // Enviar email via EmailJS
+        await emailjs.send('service_dggqn0s', 'template_gl7qjvp', templateParams)
 
-        // Por enquanto, simular envio
-        await new Promise(resolve => setTimeout(resolve, 2000))
-
-        alert(`✅ Relatório enviado com sucesso para ${email}!\n\nNota: Configure o EmailJS com suas credenciais para envio real.`)
+        alert(`✅ Relatório enviado com sucesso para ${email}!`)
         setShowEmailModal(false)
         setEmail('')
         setSendingEmail(false)
