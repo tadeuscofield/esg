@@ -16,6 +16,7 @@ function App() {
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [email, setEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
+  const [notification, setNotification] = useState(null) // {message, type}
 
   // Carregar dados salvos do LocalStorage
   const loadSavedData = () => {
@@ -749,11 +750,19 @@ function App() {
       }
     }))
 
-    setShowModal(null)
+    // Fechar modal e limpar formulário
+    setShowDetailedModal(null)
     setFormData({})
 
+    // Mostrar notificação de sucesso
     const categoryName = category === 'environmental' ? 'Ambiental' : category === 'social' ? 'Social' : 'Governança'
-    alert(`✅ Dados salvos!\n${currentMetric.name}: ${newMetricValue}/100\nScore ${categoryName}: ${newPillarScore}/100`)
+    setNotification({
+      message: `✅ ${currentMetric.name}: ${newMetricValue}/100 • Score ${categoryName}: ${newPillarScore}/100`,
+      type: 'success'
+    })
+
+    // Remover notificação após 4 segundos
+    setTimeout(() => setNotification(null), 4000)
   }
 
   // Função para salvar dados do formulário (mantida para compatibilidade)
@@ -2465,6 +2474,42 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Toast de Notificação */}
+      {notification && (
+        <div className="fixed bottom-8 right-8 z-[100] animate-slide-up">
+          <div className={`flex items-center space-x-3 px-6 py-4 rounded-xl shadow-2xl border-2 ${
+            notification.type === 'success'
+              ? 'bg-green-50 border-green-500 dark:bg-green-900/30 dark:border-green-600'
+              : 'bg-red-50 border-red-500 dark:bg-red-900/30 dark:border-red-600'
+          }`}>
+            <div className={`text-2xl ${notification.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {notification.type === 'success' ? '✅' : '❌'}
+            </div>
+            <div>
+              <p className={`font-bold text-sm ${
+                notification.type === 'success'
+                  ? 'text-green-800 dark:text-green-200'
+                  : 'text-red-800 dark:text-red-200'
+              }`}>
+                {notification.message}
+              </p>
+            </div>
+            <button
+              onClick={() => setNotification(null)}
+              className={`ml-4 ${
+                notification.type === 'success'
+                  ? 'text-green-600 hover:text-green-800'
+                  : 'text-red-600 hover:text-red-800'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
