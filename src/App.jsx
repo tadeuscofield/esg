@@ -20,6 +20,13 @@ function App() {
 
   // Carregar dados salvos do LocalStorage
   const loadSavedData = () => {
+    // Migração automática de esgNexusData para siriusESGData
+    const oldData = localStorage.getItem('esgNexusData')
+    if (oldData && !localStorage.getItem('siriusESGData')) {
+      localStorage.setItem('siriusESGData', oldData)
+      localStorage.removeItem('esgNexusData')
+    }
+
     const saved = localStorage.getItem('siriusESGData')
     return saved ? JSON.parse(saved) : null
   }
