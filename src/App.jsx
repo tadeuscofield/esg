@@ -1289,13 +1289,15 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
-              <div className="min-w-0 flex-1">
-                <h1 className={`text-lg sm:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} truncate text-center`}>
-                  Sirius ESG
-                </h1>
-                <p className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} truncate text-center`}>
+              <div className="min-w-0">
+                <p className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} truncate`}>
                   {companyInfo.name && `${companyInfo.name}${companyInfo.sector ? ` • ${companyInfo.sector}` : ''}`}
                 </p>
+              </div>
+              <div className="flex-1 text-center">
+                <h1 className={`text-lg sm:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Sirius ESG
+                </h1>
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
