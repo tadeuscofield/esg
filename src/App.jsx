@@ -20,7 +20,7 @@ function App() {
 
   // Carregar dados salvos do LocalStorage
   const loadSavedData = () => {
-    const saved = localStorage.getItem('esgNexusData')
+    const saved = localStorage.getItem('siriusESGData')
     return saved ? JSON.parse(saved) : null
   }
 
@@ -38,7 +38,7 @@ function App() {
   const [esgData, setEsgData] = useState(() => {
     const saved = loadSavedData()
     return saved?.esgData || {
-    companyName: "ESG Nexus Pro",
+    companyName: "Sirius ESG",
     reportingPeriod: "2025-01",
 
     environmental: {
@@ -339,13 +339,13 @@ function App() {
       esgData,
       timestamp: new Date().toISOString()
     }
-    localStorage.setItem('esgNexusData', JSON.stringify(dataToSave))
+    localStorage.setItem('siriusESGData', JSON.stringify(dataToSave))
   }, [companyInfo, esgData])
 
   // Função para limpar dados salvos
   const clearSavedData = () => {
     if (confirm('Deseja realmente limpar todos os dados salvos?')) {
-      localStorage.removeItem('esgNexusData')
+      localStorage.removeItem('siriusESGData')
       window.location.reload()
     }
   }
@@ -1141,7 +1141,7 @@ function App() {
       doc.setFontSize(9)
       doc.setTextColor(150, 150, 150)
       doc.setFont(undefined, 'normal')
-      doc.text(`Gerado por ESG Nexus Pro • ${timestamp}`, 105, 285, { align: 'center' })
+      doc.text(`Gerado por Sirius ESG • ${timestamp}`, 105, 285, { align: 'center' })
       doc.text(`Página ${i} de ${pageCount}`, 105, 290, { align: 'center' })
     }
 
@@ -1202,9 +1202,9 @@ function App() {
 
           const templateParams = {
             to_email: companyInfo.email,
-            from_name: 'ESG Nexus Pro',
+            from_name: 'Sirius ESG',
             company_name: companyInfo.name,
-            message: `Olá ${companyInfo.technicalResponsible},\n\nSegue em anexo o relatório ESG completo da ${companyInfo.name} gerado em ${new Date().toLocaleDateString('pt-BR')}.\n\nAtenciosamente,\nESG Nexus Pro`,
+            message: `Olá ${companyInfo.technicalResponsible},\n\nSegue em anexo o relatório ESG completo da ${companyInfo.name} gerado em ${new Date().toLocaleDateString('pt-BR')}.\n\nAtenciosamente,\nSirius ESG`,
             pdf_attachment: base64data
           }
 
@@ -1247,7 +1247,7 @@ function App() {
 
         const templateParams = {
           to_email: email,
-          from_name: 'ESG Nexus Pro',
+          from_name: 'Sirius ESG',
           company_name: companyInfo.name,
           message: `Segue em anexo o relatório ESG completo gerado em ${new Date().toLocaleDateString('pt-BR')}.`,
           pdf_attachment: base64data
@@ -1284,7 +1284,7 @@ function App() {
             <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
               <div className="min-w-0 flex-1">
                 <h1 className={`text-lg sm:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'} truncate`}>
-                  {companyInfo.name || 'ESG Nexus Pro'}
+                  {companyInfo.name || 'Sirius ESG'}
                 </h1>
                 <p className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} truncate`}>
                   {companyInfo.sector ? `${companyInfo.sector} • Plataforma ESG` : 'Plataforma Profissional de Gestão ESG'}
@@ -2609,7 +2609,7 @@ function App() {
               </div>
             </div>
             <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              <p>© 2025 ESG Nexus Pro - Todos os direitos reservados</p>
+              <p>© 2025 Sirius ESG - Todos os direitos reservados</p>
             </div>
           </div>
         </div>
