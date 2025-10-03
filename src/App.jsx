@@ -1317,10 +1317,10 @@ function App() {
                 </svg>
               </button>
 
-              {/* Methodology Button - Hidden on very small screens */}
+              {/* Methodology Button */}
               <button
                 onClick={() => setShowMethodologyModal(true)}
-                className={`hidden xs:block p-2 sm:p-2.5 rounded-lg transition-all ${darkMode ? 'bg-gray-700 text-blue-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                className={`p-2 sm:p-2.5 rounded-lg transition-all ${darkMode ? 'bg-gray-700 text-blue-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 title="Metodologia de Avaliação"
               >
                 <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
